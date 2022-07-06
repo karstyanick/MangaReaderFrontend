@@ -10,33 +10,43 @@ const imgStyles = {
   "borderRadius": "10px"
 };
 
-const spanStyles = {
-  float:"left"
-}
-
 const chapterDivStyles = {
   display: "flex",
   flexDirection: "column",
-  float: "left",
-  marginRight: "20px"
+  "margin-right": "50px",
+  "overflow": "auto"
 }
 
-const galleryDivStyles = {
-  float: "right"
+const chatpersWrapper = {
+  display: "flex",
+  flexDirection: "column",
+  "margin-top": "40px",
+  "margin-bottom": "40px",
 }
 
 function App() {
-  const [img, setChapter] = useState({chapterImgs:[]})
+  let imageGallery;
+  const [chapter, setChapter] = useState({})
   const [mangas, addManga] = useState([])
   const [manga, setManga] = useState([])
   const [currentManga, setCurrentManga] = useState("")
-
+  const [currentPage, setCurrentPage] = useState({})
   const addMangaRef = useRef()
-
+  const addMangaChaptersRef = useRef()
   const [isOpenAddManga, setOpenAddManga] = useState(false)
   const [isOpenReadManga, setOpenReadManga] = useState(false)
 
   useEffect(() => initPage(), [])
+
+  useEffect(() => {
+    console.log(currentPage);
+  }, [currentPage])
+
+  useEffect(() => {
+    if(imageGallery){
+      imageGallery.slideToIndex(currentPage[currentManga])
+    }
+  }, [isOpenReadManga, imageGallery, currentPage, currentManga])
 
   async function getChapter(mangaName, chapter){
     if (chapter === "")return
@@ -47,7 +57,7 @@ function App() {
       }
     }).then(response => {
       console.log(response.data)
-      setChapter({chapterImgs: response.data})
+      setChapter({...chapter, [mangaName]: response.data})
     })
   }
 
@@ -60,38 +70,50 @@ function App() {
     })
   }
 
-  async function getManga(){
-    const mangaName = currentManga
+  async function getManga(mangaName){
     if (mangaName === ""){console.log("empty manga name in get manga"); return}
     return axios.get("http://localhost:5000/getManga", {
       params:{
         "name": mangaName,
       }
     }).then(response => {
-      setManga(response.data)
+      return response.data
     })
   }
 
   async function addNewManga(){
     const mangaName = addMangaRef.current.value
+    const addMangaChapters = addMangaChaptersRef.current.value
     if (mangaName === ""){console.log("empty manga name in add manga"); return}
     return axios.post("http://localhost:5000/addManga", {
-      "name": mangaName
+      "name": mangaName,
+      "chapters": addMangaChapters
     }).then(response => {
-      addManga([...mangas, response.data])
+      if(response.data !== "success"){
+        addManga([...mangas, response.data])
+      }
       console.log(mangas)
     })
   }
 
-  function onCloseModal(){
+  async function onCloseModal(){
     setOpenReadManga(false)
-    setChapter({chapterImgs:[]})
+    setCurrentPage({[currentManga]: imageGallery.getCurrentIndex()})
+    //setChapter({chapterImgs:[]})
   }
 
-  function openReadManga(name){
-    setCurrentManga(name)
-    getManga()
-    setOpenReadManga(true)
+  async function openReadManga(name){
+    if(name === currentManga){
+      setOpenReadManga(true)
+    }else{
+      setCurrentManga(name)
+      if(!chapter[name]){
+        await setChapter({...chapter, [name]: []})
+      }
+      const manga = await getManga(name)
+      setManga(manga)
+      setOpenReadManga(true)
+    }
   }
 
   return (
@@ -103,16 +125,19 @@ function App() {
     <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)}>
       Add Manga
       <input ref={addMangaRef}></input>
+      Chapters
+      <input ref={addMangaChaptersRef}></input>
     </AddMangaModal>
 
-    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} onOpen={getManga}>
-      
-      <div style = {chapterDivStyles}>
-      <span style = {{color:"white"}}>{currentManga}</span>
-      {manga.map(chapter => <button style={spanStyles} key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>)}
+    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()}>
+      <div style = {{"margin-top": "40px"}}>
+      <ImageGallery  ref={i => imageGallery = i} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false}></ImageGallery>
       </div>
-      <div style = {galleryDivStyles}>
-      <ImageGallery items={img.chapterImgs} isRTL={true}></ImageGallery>
+      <div style = {chatpersWrapper}>
+      <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
+      <div style = {chapterDivStyles}>
+      {manga.map(chapter => <button class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>)}
+      </div>
       </div>
     </ReadMangaModal>
     

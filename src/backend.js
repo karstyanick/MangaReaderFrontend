@@ -80,16 +80,20 @@ function generatePageObjects(htmlContent){
 
 function generateChapterObjects(htmlContent){
     const regex = /\/read-online\/.*?chapter-(.*?)-page-1\.html/g
-    const chapterObjects = [...htmlContent.matchAll(regex)].map(page => ({["chapter "+ page[1]]: {"Chapter Link": "https://mangasee123.com" + page[0].replace("-page-1", "")}}))
+    const chapterObjects = [...htmlContent.matchAll(regex)].map(page => ({[page[1]]: {"Chapter Link": "https://mangasee123.com" + page[0].replace("-page-1", "")}}))
     const chaptersObject = Object.assign({}, ...chapterObjects)
     return chaptersObject
 }
 
-async function getPagesFromChapters(chaptersObject){
-    const keys = Object.keys(chaptersObject);
+async function getPagesFromChapters(chaptersObject, chaptersRange){
+    const chapters = chaptersRange.split("-")
+    const start = chapters[0]
+    const end = chapters[1]
+    let keys = Object.keys(chaptersObject);
+    //keys = keys.reverse() 
     var completeObject = {}
     //Math.min(keys.length, 3)
-    for(let i = 60; i<70; i++){
+    for(let i = start; i<end; i++){
         const pageHtmlContent = await fetch(chaptersObject[keys[i]]["Chapter Link"], "")
         const pageObjects = generatePageObjects(pageHtmlContent)
         completeObject = Object.assign(completeObject, {[keys[i]]: pageObjects})
@@ -121,7 +125,7 @@ app.get("/getManga", async function(req,res,next){
 
     const links = linksJson[mangaName]
     const chapterKeys = Object.keys(links)
-    chapterKeys.shift()
+    chapterKeys.pop()
 
     console.log(chapterKeys)
 
@@ -146,6 +150,8 @@ app.get("/getChapter", async function(req,res,next){
 
 app.post("/addManga", async function(req,res,next){
     let mangaName = req.body.name
+    let chapters = req.body.chapters
+
     const rawData = await fs.readFileSync('./src/links.json');
     let linksJson = {}
 
@@ -158,18 +164,24 @@ app.post("/addManga", async function(req,res,next){
     //    res.send("success")
     //}
 
-
     const chapterHtmlContent = await fetch("https://mangasee123.com/manga/" + mangaName + "/", ".ShowAllChapters")
     const poster = await getPoster(chapterHtmlContent, mangaName)
     const chaptersObject = generateChapterObjects(chapterHtmlContent)
 
-    const completeObject = await getPagesFromChapters(chaptersObject)
+    const completeObject = await getPagesFromChapters(chaptersObject, chapters)
 
     const saveObject = {[mangaName]:{poster:poster, ...completeObject}}
     
-    const saveManga = _.merge(linksJson, saveObject)
+    const saveManga = _.merge(saveObject, linksJson)
 
-    await fs.writeFile('./src/links.json', JSON.stringify(saveManga, null, 2), err => {
+    const sorted  = Object.keys(saveManga).sort().reduce((accumulator, key) => {
+        if(key !== "poster"){
+            accumulator[key] = saveManga[key]
+            return accumulator
+        }
+    }, {})
+
+    await fs.writeFile('./src/links.json', JSON.stringify(sorted, null, 2), err => {
         if(err) throw err;
         console.log("New data added");
     });
