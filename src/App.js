@@ -57,7 +57,7 @@ function App() {
 
 
   useEffect(() => {
-    if(currentPage !== pagePreviousRef.current){
+    if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
       axios.post("http://localhost:5000/save", {
         "name": currentManga,
         "chapter": chapter,
