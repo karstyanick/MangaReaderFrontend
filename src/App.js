@@ -87,9 +87,13 @@ function App() {
     }).then(response => {
       console.log(JSON.stringify(response.data))
       addManga(response.data.posters)
-      setChapter(response.data.state.currentChapter)
-      setCurrentPage(response.data.state.currentPage)
-      pagePreviousRef.current = response.data.state.currentPage
+      if(response.data.state.currentChapter){
+        setChapter(response.data.state.currentChapter)
+      }
+      if(response.data.state.currentPage){
+        setCurrentPage(response.data.state.currentPage)
+        pagePreviousRef.current = response.data.state.currentPage
+      }
     })
   }
 
