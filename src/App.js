@@ -26,37 +26,38 @@ const chatpersWrapper = {
 
 function App() {
   let imageGallery;
+
+  const addMangaRef = useRef()
+  const addMangaChaptersRef = useRef()
+
+  const pagePreviousRef = useRef({});
+  const isOpenReadMangaPreviousRef = useRef(false)
+  const firstPageLoadRef = useRef(true)
+
   const [chapter, setChapter] = useState({})
   const [mangas, addManga] = useState([])
   const [manga, setManga] = useState([])
   const [currentManga, setCurrentManga] = useState("")
   const [currentPage, setCurrentPage] = useState({})
-  const addMangaRef = useRef()
-  const addMangaChaptersRef = useRef()
   const [isOpenAddManga, setOpenAddManga] = useState(false)
   const [isOpenReadManga, setOpenReadManga] = useState(false)
 
-
-  const pagePreviousRef = useRef({});
-  const isOpenReadMangaPreviousRef = useRef(false)
-
-  useEffect(() => initPage(), [])
-
   useEffect(() => {
-    console.log(currentPage);
-  }, [currentPage])
+    initPage()
+    saveState(currentPage, chapter, currentManga)
+    slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga)
+  }, [currentPage, chapter, currentManga, isOpenReadManga, imageGallery])
 
-  useEffect(() => {
+  function slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga){
     if(isOpenReadManga !== isOpenReadMangaPreviousRef.current){
       if(imageGallery){
         imageGallery.slideToIndex(currentPage[currentManga])
       }
       isOpenReadMangaPreviousRef.current = isOpenReadManga;
     }
-  }, [isOpenReadManga, imageGallery, currentPage, currentManga])
+  }
 
-
-  useEffect(() => {
+  function saveState(currentPage, chapter, currentManga) {
     if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
       axios.post("http://localhost:5000/save", {
         "name": currentManga,
@@ -66,46 +67,24 @@ function App() {
 
       pagePreviousRef.current = currentPage;
     }
-  }, [currentPage, chapter, currentManga])
-
-  async function getChapter(mangaName, chapter){
-    if (chapter === "")return
-    return axios.get("http://localhost:5000/getChapter", {
-      params:{
-        "name": mangaName,
-        "chapter": chapter
-      }
-    }).then(response => {
-      console.log(response.data)
-      setChapter({...chapter, [mangaName]: response.data})
-    })
   }
 
   async function initPage(){
-    console.log("test")
-    return axios.get("http://localhost:5000/", {
-    }).then(response => {
-      console.log(JSON.stringify(response.data))
-      addManga(response.data.posters)
-      if(response.data.state.currentChapter){
-        setChapter(response.data.state.currentChapter)
-      }
-      if(response.data.state.currentPage){
-        setCurrentPage(response.data.state.currentPage)
-        pagePreviousRef.current = response.data.state.currentPage
-      }
-    })
-  }
-
-  async function getManga(mangaName){
-    if (mangaName === ""){console.log("empty manga name in get manga"); return}
-    return axios.get("http://localhost:5000/getManga", {
-      params:{
-        "name": mangaName,
-      }
-    }).then(response => {
-      return response.data
-    })
+    if(firstPageLoadRef.current === true){
+      firstPageLoadRef.current = false
+      return axios.get("http://localhost:5000/", {
+      }).then(response => {
+        console.log(JSON.stringify(response.data))
+        addManga(response.data.posters)
+        if(response.data.state.currentChapter){
+          setChapter(response.data.state.currentChapter)
+        }
+        if(response.data.state.currentPage){
+          setCurrentPage(response.data.state.currentPage)
+          pagePreviousRef.current = response.data.state.currentPage
+        }
+      })
+    }
   }
 
   async function addNewManga(){
@@ -120,6 +99,30 @@ function App() {
         addManga([...mangas, response.data])
       }
       console.log(mangas)
+    })
+  }
+
+  async function getManga(mangaName){
+    if (mangaName === ""){console.log("empty manga name in get manga"); return}
+    return axios.get("http://localhost:5000/getManga", {
+      params:{
+        "name": mangaName,
+      }
+    }).then(response => {
+      return response.data
+    })
+  }
+
+  async function getChapter(mangaName, chapter){
+    if (chapter === "")return
+    return axios.get("http://localhost:5000/getChapter", {
+      params:{
+        "name": mangaName,
+        "chapter": chapter
+      }
+    }).then(response => {
+      console.log(response.data)
+      setChapter({...chapter, [mangaName]: response.data})
     })
   }
 
