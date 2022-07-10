@@ -36,6 +36,10 @@ function App() {
   const [isOpenAddManga, setOpenAddManga] = useState(false)
   const [isOpenReadManga, setOpenReadManga] = useState(false)
 
+
+  const pagePreviousRef = useRef({});
+  const isOpenReadMangaPreviousRef = useRef(false)
+
   useEffect(() => initPage(), [])
 
   useEffect(() => {
@@ -43,10 +47,26 @@ function App() {
   }, [currentPage])
 
   useEffect(() => {
-    if(imageGallery){
-      imageGallery.slideToIndex(currentPage[currentManga])
+    if(isOpenReadManga !== isOpenReadMangaPreviousRef.current){
+      if(imageGallery){
+        imageGallery.slideToIndex(currentPage[currentManga])
+      }
+      isOpenReadMangaPreviousRef.current = isOpenReadManga;
     }
   }, [isOpenReadManga, imageGallery, currentPage, currentManga])
+
+
+  useEffect(() => {
+    if(currentPage !== pagePreviousRef.current){
+      axios.post("http://localhost:5000/save", {
+        "name": currentManga,
+        "chapter": chapter,
+        "page": currentPage
+      })
+
+      pagePreviousRef.current = currentPage;
+    }
+  }, [currentPage, chapter, currentManga])
 
   async function getChapter(mangaName, chapter){
     if (chapter === "")return
@@ -65,8 +85,11 @@ function App() {
     console.log("test")
     return axios.get("http://localhost:5000/", {
     }).then(response => {
-      console.log(response.data)
-      addManga(response.data)
+      console.log(JSON.stringify(response.data))
+      addManga(response.data.posters)
+      setChapter(response.data.state.currentChapter)
+      setCurrentPage(response.data.state.currentPage)
+      pagePreviousRef.current = response.data.state.currentPage
     })
   }
 
@@ -99,7 +122,6 @@ function App() {
   async function onCloseModal(){
     setOpenReadManga(false)
     setCurrentPage({[currentManga]: imageGallery.getCurrentIndex()})
-    //setChapter({chapterImgs:[]})
   }
 
   async function openReadManga(name){

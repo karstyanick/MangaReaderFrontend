@@ -105,14 +105,51 @@ async function getPagesFromChapters(chaptersObject, chaptersRange){
 
 app.get("/", async function(req, res, next){
     const rawData = await fs.readFileSync('./src/links.json');
+    const saveData = await fs.readFileSync('./src/save.json')
     let linksJson = {}
+    let saveJson = {}
     if (rawData.length !== 0) {
         linksJson = JSON.parse(rawData);
     }
+    if (saveData.length !== 0) {
+        saveJson = JSON.parse(saveData);
+    }
 
     const mangaKeys = Object.keys(linksJson)
-    const posterLinks = mangaKeys.map(manga => ({id: uuidv4(), name: manga, poster: linksJson[manga].poster}))
-    res.send(posterLinks)
+    const initPosterList = mangaKeys.map(manga => ({id: uuidv4(), name: manga, poster: linksJson[manga].poster}));
+
+    const initObject = {
+        posters: initPosterList,
+        state: {
+            currentChapter: saveJson.chapter,
+            currentPage: saveJson.page
+        }
+    }
+
+    res.send(initObject)
+})
+
+app.post("/save", async function(req, res, next){
+    const chapter = req.body.chapter
+    const page = req.body.page
+
+    const rawData = await fs.readFileSync('./src/save.json');
+    let saveJson = {}
+
+    if (rawData.length !== 0) {
+        saveJson = JSON.parse(rawData);
+    }
+    const saveComb = {
+        ...saveJson,
+        chapter: chapter,
+        page: page
+    }
+    await fs.writeFile('./src/save.json', JSON.stringify(saveComb, null, 2), err => {
+        if(err) throw err;
+        console.log("Data saved");
+    });
+
+    res.send("success")
 })
 
 app.get("/getManga", async function(req,res,next){
