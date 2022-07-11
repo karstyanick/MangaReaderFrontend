@@ -9,21 +9,6 @@ const imgStyles = {
   margin:"10px",
   "borderRadius": "10px"
 };
-
-const chapterDivStyles = {
-  display: "flex",
-  flexDirection: "column",
-  "margin-right": "50px",
-  "overflow": "auto"
-}
-
-const chatpersWrapper = {
-  display: "flex",
-  flexDirection: "column",
-  "margin-top": "40px",
-  "margin-bottom": "40px",
-}
-
 function App() {
   let imageGallery;
 
@@ -41,6 +26,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState({})
   const [isOpenAddManga, setOpenAddManga] = useState(false)
   const [isOpenReadManga, setOpenReadManga] = useState(false)
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     initPage()
@@ -162,12 +148,25 @@ function App() {
       <div style = {{"margin-top": "40px"}}>
       <ImageGallery  ref={i => imageGallery = i} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false}></ImageGallery>
       </div>
-      <div style = {chatpersWrapper}>
+      <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
-      <div style = {chapterDivStyles}>
+      <div class = "chapters">
       {manga.map(chapter => <button class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>)}
       </div>
       </div>
+      <button class = "button-31 hiddenbutton" onClick={() => setVisible(!visible)}>=</button>
+
+      {visible && <>
+          <div class = "chaptersWrapperSmallScreen">
+          <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
+          <div class = "chapters">
+          {manga.map(chapter => <button class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>)}
+          </div>
+          </div>
+      </>}
+
+      
+
     </ReadMangaModal>
     
     </>
