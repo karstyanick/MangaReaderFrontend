@@ -164,9 +164,6 @@ function App() {
           </div>
           </div>
       </>}
-
-      
-
     </ReadMangaModal>
     
     </>
