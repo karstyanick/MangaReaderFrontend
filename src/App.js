@@ -3,7 +3,7 @@ import axios from "axios";
 import ImageGallery from 'react-image-gallery';
 import "react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal} from "./Modal"
-
+const BACKENDHOST = process.env.BACKENDHOST
 const imgStyles = {
   height:"300px",
   margin:"10px",
@@ -45,7 +45,7 @@ function App() {
 
   function saveState(currentPage, chapter, currentManga) {
     if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
-      axios.post("http://localhost:5000/save", {
+      axios.post(`${BACKENDHOST}/save`, {
         "name": currentManga,
         "chapter": chapter,
         "page": currentPage
@@ -58,7 +58,7 @@ function App() {
   async function initPage(){
     if(firstPageLoadRef.current === true){
       firstPageLoadRef.current = false
-      return axios.get("http://localhost:5000/", {
+      return axios.get(`${BACKENDHOST}/`, {
       }).then(response => {
         console.log(JSON.stringify(response.data))
         addManga(response.data.posters)
@@ -77,7 +77,7 @@ function App() {
     const mangaName = addMangaRef.current.value
     const addMangaChapters = addMangaChaptersRef.current.value
     if (mangaName === ""){console.log("empty manga name in add manga"); return}
-    return axios.post("http://localhost:5000/addManga", {
+    return axios.post(`${BACKENDHOST}/addManga`, {
       "name": mangaName,
       "chapters": addMangaChapters
     }).then(response => {
@@ -90,7 +90,7 @@ function App() {
 
   async function getManga(mangaName){
     if (mangaName === ""){console.log("empty manga name in get manga"); return}
-    return axios.get("http://localhost:5000/getManga", {
+    return axios.get(`${BACKENDHOST}/getManga`, {
       params:{
         "name": mangaName,
       }
@@ -101,7 +101,7 @@ function App() {
 
   async function getChapter(mangaName, chapter){
     if (chapter === "")return
-    return axios.get("http://localhost:5000/getChapter", {
+    return axios.get(`${BACKENDHOST}/getChapter`, {
       params:{
         "name": mangaName,
         "chapter": chapter
