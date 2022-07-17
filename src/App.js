@@ -3,12 +3,39 @@ import axios from "axios";
 import ImageGallery from 'react-image-gallery';
 import "react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal} from "./Modal"
-const BACKENDHOST = process.env.BACKENDHOST
+
+let BACKENDHOST = "http://95.179.132.168" // "http://localhost:5000";
+
 const imgStyles = {
   height:"300px",
   margin:"10px",
   "borderRadius": "10px"
 };
+
+const navChaptersRight = {
+  height:"40px",
+  width: "100px",
+  display: "flex",
+  "justifyContent": "center",
+  top: "50%",
+  transform: "translate(0, -50%)",
+  "z-index": "1200",
+  position: "absolute",
+  right: 0
+}
+
+const navChaptersLeft = {
+  height:"40px",
+  width: "100px",
+  display: "flex",
+  "justifyContent": "center",
+  top: "50%",
+  transform: "translate(0, -50%)",
+  "z-index": "1200",
+  position: "absolute",
+  left: 0
+}
+
 function App() {
   let imageGallery;
 
@@ -20,6 +47,7 @@ function App() {
   const firstPageLoadRef = useRef(true)
 
   const [chapter, setChapter] = useState({})
+  const [chapterNumber, setCurrentChapterNumber] = useState(0)
   const [mangas, addManga] = useState([])
   const [manga, setManga] = useState([])
   const [currentManga, setCurrentManga] = useState("")
@@ -27,6 +55,7 @@ function App() {
   const [isOpenAddManga, setOpenAddManga] = useState(false)
   const [isOpenReadManga, setOpenReadManga] = useState(false)
   const [visible, setVisible] = useState(false);
+  const [lastPage, setlastPage] = useState(false)
 
   useEffect(() => {
     initPage()
@@ -47,6 +76,7 @@ function App() {
     if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
       axios.post(`${BACKENDHOST}/save`, {
         "name": currentManga,
+        "chapterNumber": chapterNumber,
         "chapter": chapter,
         "page": currentPage
       })
@@ -64,6 +94,7 @@ function App() {
         addManga(response.data.posters)
         if(response.data.state.currentChapter){
           setChapter(response.data.state.currentChapter)
+          setCurrentChapterNumber(response.data.state.currentChapterNumber)
         }
         if(response.data.state.currentPage){
           setCurrentPage(response.data.state.currentPage)
@@ -82,9 +113,21 @@ function App() {
       "chapters": addMangaChapters
     }).then(response => {
       if(response.data !== "success"){
-        addManga([...mangas, response.data])
+        addManga([...mangas, response.data.metaD])
       }
       console.log(mangas)
+    })
+  }
+
+  async function addChapters(){
+    const mangaName = currentManga
+    const newChapters = `${manga.at(-1)}-${parseInt(manga.at(-1))+10}`
+    
+    return axios.post(`${BACKENDHOST}/addManga`, {
+      "name": mangaName,
+      "chapters": newChapters
+    }).then(response => {
+      setManga(response.data.chapters)
     })
   }
 
@@ -108,7 +151,9 @@ function App() {
       }
     }).then(response => {
       console.log(response.data)
-      setChapter({...chapter, [mangaName]: response.data})
+      setChapter({[mangaName]: response.data.links})
+      setCurrentChapterNumber(response.data.chapter)
+      setlastPage(false)
     })
   }
 
@@ -118,16 +163,21 @@ function App() {
   }
 
   async function openReadManga(name){
-    if(name === currentManga){
-      setOpenReadManga(true)
+    setCurrentManga(name)
+    if(!chapter[name]){
+      await setChapter({...chapter, [name]: []})
+    }
+    const manga = await getManga(name)
+    setManga(manga)
+    setOpenReadManga(true)
+  }
+
+  function checkLastPage(index){
+    if(index===chapter[currentManga].length-1){
+      setlastPage(true)
+      console.log(chapter)
     }else{
-      setCurrentManga(name)
-      if(!chapter[name]){
-        await setChapter({...chapter, [name]: []})
-      }
-      const manga = await getManga(name)
-      setManga(manga)
-      setOpenReadManga(true)
+      setlastPage(false)
     }
   }
 
@@ -145,15 +195,25 @@ function App() {
     </AddMangaModal>
 
     <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()}>
+      {lastPage &&<>
+        <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber)-1)}>previous</button>
+        </>
+      }
       <div style = {{"margin-top": "40px"}}>
-      <ImageGallery  ref={i => imageGallery = i} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false}></ImageGallery>
+      <ImageGallery  ref={i => imageGallery = i} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false}></ImageGallery>
       </div>
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
       <div class = "chapters">
       {manga.map(chapter => <button class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>)}
+      <button class="button-31" key={"addChapters"} onClick={() => addChapters()}>Add 10 Chapters </button>
       </div>
       </div>
+      {lastPage &&<>
+        <button class="button-31" style={navChaptersLeft} onClick={() => getChapter(currentManga, parseInt(chapterNumber)+1)}>next</button>
+        </>
+      }
+
       <button class = "button-31 hiddenbutton" onClick={() => setVisible(!visible)}>=</button>
 
       {visible && <>
