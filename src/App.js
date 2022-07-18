@@ -56,6 +56,7 @@ function App() {
   const [isOpenReadManga, setOpenReadManga] = useState(false)
   const [visible, setVisible] = useState(false);
   const [lastPage, setlastPage] = useState(false)
+  const [showIndex, toggleShowIndex] = useState(false)
 
   useEffect(() => {
     initPage()
@@ -200,12 +201,15 @@ function App() {
         </>
       }
       <div style = {{"margin-top": "40px"}}>
-      <ImageGallery  ref={i => imageGallery = i} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false}></ImageGallery>
+      <ImageGallery  ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false}></ImageGallery>
       </div>
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
       <div class = "chapters">
-      {manga.map(chapter => <button class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>)}
+      {manga.map(chapter => {
+        const color = (chapter === chapterNumber) ? "#ffa07a" : ""
+        return <button style={{backgroundColor:color}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
+      })}
       <button class="button-31" key={"addChapters"} onClick={() => addChapters()}>Add 10 Chapters </button>
       </div>
       </div>
