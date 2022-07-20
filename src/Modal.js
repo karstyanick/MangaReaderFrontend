@@ -18,7 +18,8 @@ const MODAL_STYLES_2 = {
     "flex-direction": "row-reverse",
     width: "100%",
     right: "0px",
-    height: "100%"
+    "max-height": "100%",
+    "align-content": "center"
 }
 
 const OVERLAY_STYLES = {
@@ -50,7 +51,7 @@ export function AddMangaModal({addManga, open, children, onClose}) {
     )
 }
 
-export function ReadMangaModal({children, open, onClose}){
+export function ReadMangaModal({children, open, onClose, setVisible}){
     if(!open) return null
 
     return ReactDOM.createPortal(
@@ -59,6 +60,7 @@ export function ReadMangaModal({children, open, onClose}){
             <div style={MODAL_STYLES_2}>
                 {children}
             </div>
+            <button class = "button-31 hiddenbutton" onClick={setVisible}>=</button>
             <button class={"button-31"} style={{position: "absolute", zIndex: 1000, right: "0%", top:"0%", width: "0px", "minHeight": "0px", "minWidth": "0px", height:"38px", "fontSize": "small", display: "flex", "justifyContent": "center"}} onClick={onClose} >X</button>
         </>,
         document.getElementById("portal")

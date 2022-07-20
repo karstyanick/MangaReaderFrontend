@@ -87,6 +87,16 @@
   left: 0;
   top: 0;
   min-height: 0;
+  z-index: 1000;
+}
+
+.image-gallery {
+  top: 50%;
+  transform: translate(-0,-50%);
+}
+
+.image-gallery-content .image-gallery-slide .image-gallery-image {
+  max-height: calc(100vh - 80px);
 }
 
 @media (max-width: 828px) {
@@ -96,6 +106,9 @@
   .hiddenbutton {
     display: flex;
     justify-content: center;
+  }
+  .image-gallery-content .image-gallery-slide .image-gallery-image {
+    max-height: calc(100vh);
   }
 }
 

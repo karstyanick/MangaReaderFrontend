@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect  } from "react";
 import axios from "axios";
 import ImageGallery from 'react-image-gallery';
-import "react-image-gallery/styles/css/image-gallery.css"
+import "../node_modules/react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal} from "./Modal"
 
-let BACKENDHOST = "http://95.179.132.168" // "http://localhost:5000";
+let BACKENDHOST = "http://95.179.132.168"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"300px",
@@ -195,13 +196,13 @@ function App() {
       <input ref={addMangaChaptersRef}></input>
     </AddMangaModal>
 
-    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()}>
+    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> setVisible(!visible)}>
       {lastPage &&<>
         <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber)-1)}>previous</button>
         </>
       }
-      <div style = {{"margin-top": "40px"}}>
-      <ImageGallery  ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false}></ImageGallery>
+      <div>
+      <ImageGallery  ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
       </div>
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
@@ -218,13 +219,16 @@ function App() {
         </>
       }
 
-      <button class = "button-31 hiddenbutton" onClick={() => setVisible(!visible)}>=</button>
 
       {visible && <>
           <div class = "chaptersWrapperSmallScreen">
           <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
           <div class = "chapters">
-          {manga.map(chapter => <button class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>)}
+          {manga.map(chapter => {
+            const color = (chapter === chapterNumber) ? "#ffa07a" : ""
+            return <button style={{backgroundColor:color}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
+          })}
+          <button class="button-31" key={"addChapters"} onClick={() => addChapters()}>Add 10 Chapters </button>  
           </div>
           </div>
       </>}
