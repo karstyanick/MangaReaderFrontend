@@ -61,7 +61,7 @@ export function ReadMangaModal({children, open, onClose, setVisible}){
                 {children}
             </div>
             <button class = "button-31 hiddenbutton" onClick={setVisible}>=</button>
-            <button class={"button-31"} style={{position: "absolute", zIndex: 1000, right: "0%", top:"0%", width: "0px", "minHeight": "0px", "minWidth": "0px", height:"38px", "fontSize": "small", display: "flex", "justifyContent": "center"}} onClick={onClose} >X</button>
+            <button class={"button-31"} style={{position: "fixed", zIndex: 1000, right: "0%", top:"0%", width: "0px", "minHeight": "0px", "minWidth": "0px", height:"38px", "fontSize": "small", display: "flex", "justifyContent": "center"}} onClick={onClose} >X</button>
         </>,
         document.getElementById("portal")
     )

@@ -5,8 +5,8 @@ import "../node_modules/react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal} from "./Modal"
 import plusmanga from "./plusmanga.png"
 
-//let BACKENDHOST = "http://95.179.132.168"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "http://95.179.132.168"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"300px",
@@ -170,6 +170,8 @@ function App() {
   async function onCloseModal(){
     setOpenReadManga(false)
     setCurrentPage({...currentPage, [currentManga]: imageGallery.getCurrentIndex()})
+    document.documentElement.style.overflow = 'scroll';
+    document.body.scroll = "yes";
   }
 
   async function openReadManga(name){
@@ -187,6 +189,10 @@ function App() {
       const manga = await getManga(name)
       setManga(manga)
       setOpenReadManga(true)
+
+      document.documentElement.style.overflow = 'hidden';
+      document.body.scroll = "no";
+
     }
   }
 
@@ -217,7 +223,7 @@ function App() {
         </>
       }
       <div>
-      <ImageGallery  ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
+      <ImageGallery lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
       </div>
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
