@@ -99,6 +99,12 @@
   max-height: calc(100vh - 80px);
 }
 
+.posters {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 828px) {
   .chaptersWrapper {
       display: none;
@@ -109,6 +115,12 @@
   }
   .image-gallery-content .image-gallery-slide .image-gallery-image {
     max-height: calc(100vh);
+  }
+}
+
+@media (max-width: 496px) {
+  .posters{
+    justify-content: center;
   }
 }
 

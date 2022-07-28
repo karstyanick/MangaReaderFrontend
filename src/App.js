@@ -3,9 +3,10 @@ import axios from "axios";
 import ImageGallery from 'react-image-gallery';
 import "../node_modules/react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal} from "./Modal"
+import plusmanga from "./plusmanga.png"
 
-let BACKENDHOST = "http://95.179.132.168"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "http://95.179.132.168"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"300px",
@@ -40,6 +41,8 @@ const navChaptersLeft = {
 function App() {
   let imageGallery;
 
+
+  let wakeLock = null
   const addMangaRef = useRef()
   const addMangaChaptersRef = useRef()
 
@@ -48,8 +51,8 @@ function App() {
   const firstPageLoadRef = useRef(true)
 
   const [chapter, setChapter] = useState({})
-  const [chapterNumber, setCurrentChapterNumber] = useState(0)
-  const [mangas, addManga] = useState([])
+  const [chapterNumber, setCurrentChapterNumber] = useState({})
+  const [mangas, addManga] = useState([{id: "addManga", name:"addManga", poster: plusmanga}])
   const [manga, setManga] = useState([])
   const [currentManga, setCurrentManga] = useState("")
   const [currentPage, setCurrentPage] = useState({})
@@ -75,6 +78,10 @@ function App() {
   }
 
   function saveState(currentPage, chapter, currentManga) {
+
+    console.log(`currentPage: ${JSON.stringify(currentPage)}, currentChapter: ${JSON.stringify(chapter)}, currentManga: ${currentManga}`)
+
+
     if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
       axios.post(`${BACKENDHOST}/save`, {
         "name": currentManga,
@@ -93,7 +100,7 @@ function App() {
       return axios.get(`${BACKENDHOST}/`, {
       }).then(response => {
         console.log(JSON.stringify(response.data))
-        addManga(response.data.posters)
+        addManga(response.data.posters.concat(mangas))
         if(response.data.state.currentChapter){
           setChapter(response.data.state.currentChapter)
           setCurrentChapterNumber(response.data.state.currentChapterNumber)
@@ -115,7 +122,8 @@ function App() {
       "chapters": addMangaChapters
     }).then(response => {
       if(response.data !== "success"){
-        addManga([...mangas, response.data.metaD])
+        mangas.pop()
+        addManga([...mangas, response.data.metaData, {id: "addManga", name:"addManga", poster: plusmanga}])
       }
       console.log(mangas)
     })
@@ -144,34 +152,42 @@ function App() {
     })
   }
 
-  async function getChapter(mangaName, chapter){
-    if (chapter === "")return
+  async function getChapter(mangaName, chapterToGet){
+    if (chapterToGet === "")return
     return axios.get(`${BACKENDHOST}/getChapter`, {
       params:{
         "name": mangaName,
-        "chapter": chapter
+        "chapter": chapterToGet
       }
     }).then(response => {
       console.log(response.data)
-      setChapter({[mangaName]: response.data.links})
-      setCurrentChapterNumber(response.data.chapter)
+      setChapter({...chapter, [mangaName]: response.data.links})
+      setCurrentChapterNumber({...chapterNumber, [mangaName]: response.data.chapter})
       setlastPage(false)
     })
   }
 
   async function onCloseModal(){
     setOpenReadManga(false)
-    setCurrentPage({[currentManga]: imageGallery.getCurrentIndex()})
+    setCurrentPage({...currentPage, [currentManga]: imageGallery.getCurrentIndex()})
   }
 
   async function openReadManga(name){
-    setCurrentManga(name)
-    if(!chapter[name]){
-      await setChapter({...chapter, [name]: []})
+    if(name === "addManga"){
+      setOpenAddManga(true)
+    }else{
+      console.log(mangas)
+      setCurrentManga(name)
+      if(!chapter[name]){
+        await setChapter({...chapter, [name]: []})
+      }
+      
+      wakeLock = await navigator.wakeLock.request();
+
+      const manga = await getManga(name)
+      setManga(manga)
+      setOpenReadManga(true)
     }
-    const manga = await getManga(name)
-    setManga(manga)
-    setOpenReadManga(true)
   }
 
   function checkLastPage(index){
@@ -186,8 +202,7 @@ function App() {
   return (
     <>
 
-    <button style = {{float:"right", margin:"10px"}} onClick={() => setOpenAddManga(true)}>Add Manga</button>
-    <div>{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
+    <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
 
     <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)}>
       Add Manga
@@ -198,7 +213,7 @@ function App() {
 
     <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> setVisible(!visible)}>
       {lastPage &&<>
-        <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber)-1)}>previous</button>
+        <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)}>previous</button>
         </>
       }
       <div>
@@ -208,14 +223,14 @@ function App() {
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
       <div class = "chapters">
       {manga.map(chapter => {
-        const color = (chapter === chapterNumber) ? "#ffa07a" : ""
+        const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
         return <button style={{backgroundColor:color}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
       })}
       <button class="button-31" key={"addChapters"} onClick={() => addChapters()}>Add 10 Chapters </button>
       </div>
       </div>
       {lastPage &&<>
-        <button class="button-31" style={navChaptersLeft} onClick={() => getChapter(currentManga, parseInt(chapterNumber)+1)}>next</button>
+        <button class="button-31" style={navChaptersLeft} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])+1)}>next</button>
         </>
       }
 
@@ -225,7 +240,7 @@ function App() {
           <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
           <div class = "chapters">
           {manga.map(chapter => {
-            const color = (chapter === chapterNumber) ? "#ffa07a" : ""
+            const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
             return <button style={{backgroundColor:color}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
           })}
           <button class="button-31" key={"addChapters"} onClick={() => addChapters()}>Add 10 Chapters </button>  
