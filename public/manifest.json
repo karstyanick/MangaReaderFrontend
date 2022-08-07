@@ -1,0 +1,9 @@
+{
+    "short_name": "MangaReader",
+    "name": "MangaReader",
+    "icons": [],
+    "start_url": ".",
+    "display": "fullscreen",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+  }
