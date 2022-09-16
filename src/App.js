@@ -14,37 +14,41 @@ let BACKENDHOST = "http://localhost:5000"
 const imgStyles = {
   height:"300px",
   margin:"10px",
-  "borderRadius": "10px"
+  "borderRadius": "10px",
+  cursor: "pointer"
 };
 
 const authButtonStyles = {
   width: "100px",
   "min-height": "30px",
-  padding: "0"
+  padding: "0",
+  cursor: "pointer"
 }
 
 const navChaptersRight = {
   height:"40px",
-  width: "100px",
+  width: "40px",
   display: "flex",
   "justifyContent": "center",
   top: "50%",
   transform: "translate(0, -50%)",
   "z-index": "1200",
   position: "absolute",
-  right: 0
+  right: 0,
+  cursor: "pointer"
 }
 
 const navChaptersLeft = {
   height:"40px",
-  width: "100px",
+  width: "40px",
   display: "flex",
   "justifyContent": "center",
   top: "50%",
   transform: "translate(0, -50%)",
   "z-index": "1200",
   position: "absolute",
-  left: 0
+  left: 0,
+  cursor: "pointer"
 }
 
 function App() {
@@ -56,6 +60,8 @@ function App() {
 
   const usernameRef = useRef()
   const passwordRef = useRef()
+
+  const scrollRef = useRef()
 
   const pagePreviousRef = useRef({});
   const isOpenReadMangaPreviousRef = useRef(false)
@@ -74,6 +80,7 @@ function App() {
   const [visibleLogin, setVisibleLogin] = useState(false)
   const [visibleLogout, setVisibleLogout] = useState(true)
   const [lastPage, setlastPage] = useState(false)
+  const [firstPage, setFirstPage] = useState(false)
   const [showIndex, toggleShowIndex] = useState(false)
   const [currentUser, setCurrentUser] = useState("")
 
@@ -81,7 +88,8 @@ function App() {
     initPage()
     saveState(currentPage, chapter, currentManga)
     slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga)
-  }, [currentPage, chapter, currentManga, isOpenReadManga, imageGallery])
+    slideToChapter(visible, isOpenReadManga)
+  }, [currentPage, chapter, currentManga, isOpenReadManga, imageGallery, visible])
 
   function slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga){
     if(isOpenReadManga !== isOpenReadMangaPreviousRef.current){
@@ -89,6 +97,24 @@ function App() {
         imageGallery.slideToIndex(currentPage[currentManga])
       }
       isOpenReadMangaPreviousRef.current = isOpenReadManga;
+    }
+  }
+
+  function slideToChapter(visible, isOpenReadManga){
+
+
+    console.log(`visible: ${visible}, isOpenReadManga:${isOpenReadManga}`)
+
+    if(visible){
+      scrollRef.current.scrollIntoView()
+      return
+    }
+    
+    console.log(window.innerWidth)
+
+    if(isOpenReadManga && window.innerWidth > "828"){
+      scrollRef.current.scrollIntoView()
+      return
     }
   }
 
@@ -235,6 +261,7 @@ function App() {
 
   async function onCloseModal(){
     setOpenReadManga(false)
+    setVisible(false)
     setCurrentPage({...currentPage, [currentManga]: imageGallery.getCurrentIndex()})
     document.documentElement.style.overflow = 'scroll';
     document.body.scroll = "yes";
@@ -258,15 +285,21 @@ function App() {
 
       document.documentElement.style.overflow = 'hidden';
       document.body.scroll = "no";
-
     }
   }
 
-  function checkLastPage(index){
+  function checkLastOrFirstPage(index){
     if(index===chapter[currentManga].length-1){
       setlastPage(true)
-    }else{
+      setFirstPage(false)
+    }
+    else if(index===0){
+      setFirstPage(true)
       setlastPage(false)
+    }
+    else{
+      setlastPage(false)
+      setFirstPage(false)
     }
   }
 
@@ -276,14 +309,14 @@ function App() {
     <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
       <div style={{display: "flex", flexDirection: "row"}}>
         {visibleLogin && 
-          <button class="button-31" style={{...authButtonStyles}} onClick={() => setOpenSignup(true)} onTouchCancel={() => setOpenSignup(true)}>Sing in</button>
+          <button class="button-31" style={{...authButtonStyles}} onClick={() => setOpenSignup(true)}>Sing in</button>
         }
         <span style={{ fontSize: "30px", color: "white" }}>{currentUser}</span>
         {visibleLogout &&
-          <button class="button-31" style={{...authButtonStyles, right: "10px", position:"absolute"}} onClick={() => logout()} onTouchCancel={() => setOpenSignup(true)}>Log out</button>
+          <button class="button-31" style={{...authButtonStyles, right: "10px", position:"absolute"}} onClick={() => logout()}>Log out</button>
         }
       </div>
-      <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} onTouchCancel={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
+      <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
     </div>
 
     
@@ -298,26 +331,27 @@ function App() {
       <input ref={passwordRef} placeholder={"Password"}></input>
     </SignupModal>
 
-    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> setVisible(!visible)}>
-      {lastPage &&<>
-        <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)} onTouchCancel = {() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)}>previous</button>
+    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> {setVisible(!visible)}}>
+      {firstPage &&<>
+        <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)}>&gt;</button>
         </>
       }
       <div>
-      <ImageGallery lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onTouchCancel = {()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
+      <ImageGallery lazyLoad={true} style={{cursor: "pointer"}} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
       </div>
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
       <div class = "chapters">
       {manga.map(chapter => {
         const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
-        return <button style={{backgroundColor:color}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)} onTouchCancel={() => getChapter(currentManga, chapter)}>{chapter}</button>      
+        const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
+        return <button ref={ref} style={{backgroundColor:color, cursor: "pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>
       })}
-      <button class="button-31" key={"addChapters"} onClick={() => addChapters()} onTouchCancel={() => addChapters()}>Add 10 Chapters </button>
+      <button class="button-31" key={"addChapters"} style={{cursor: "pointer"}} onClick={() => addChapters()}>Add 10 Chapters </button>
       </div>
       </div>
       {lastPage &&<>
-        <button class="button-31" style={navChaptersLeft} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])+1)} onTouchCancel={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])+1)}>next</button>
+        <button class="button-31" style={navChaptersLeft} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])+1)}>&lt;</button>
         </>
       }
 
@@ -328,9 +362,10 @@ function App() {
           <div class = "chapters">
           {manga.map(chapter => {
             const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
-            return <button style={{backgroundColor:color}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)} onTouchCancel={() => getChapter(currentManga, chapter)}>{chapter}</button>      
+            const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
+            return <button ref={ref} style={{backgroundColor:color, cursor:"pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
           })}
-          <button class="button-31" key={"addChapters"} onClick={() => addChapters()} onTouchCancel={() => addChapters()}>Add 10 Chapters </button>  
+          <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add 10 Chapters </button>  
           </div>
           </div>
       </>}
