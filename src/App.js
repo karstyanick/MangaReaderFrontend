@@ -101,17 +101,10 @@ function App() {
   }
 
   function slideToChapter(visible, isOpenReadManga){
-
-
-    console.log(`visible: ${visible}, isOpenReadManga:${isOpenReadManga}`)
-
     if(visible){
       scrollRef.current.scrollIntoView()
       return
     }
-    
-    console.log(window.innerWidth)
-
     if(isOpenReadManga && window.innerWidth > "828"){
       scrollRef.current.scrollIntoView()
       return
