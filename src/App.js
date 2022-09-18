@@ -4,8 +4,7 @@ import ImageGallery from 'react-image-gallery';
 import "../node_modules/react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal, SignupModal} from "./Modal"
 import plusmanga from "./plusmanga.png"
-import { isLabelWithInternallyDisabledControl } from "@testing-library/user-event/dist/utils";
-
+import Autocomplete from "react-autocomplete"
 axios.defaults.withCredentials = true
 
 //let BACKENDHOST = "https://mangareaderbackend.lol"
@@ -51,9 +50,18 @@ const navChaptersLeft = {
   cursor: "pointer"
 }
 
+const dropDownStyle = {
+  //borderRadius: '3px',
+  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+  background: 'rgba(255, 255, 255, 0.9)',
+  //padding: '2px 0',
+  fontSize: '90%',
+  overflow: 'auto',
+  maxHeight: '50%', // TODO: don't cheat, let it flow to the bottom
+}
+
 function App() {
   let imageGallery;
-
 
   const addMangaRef = useRef()
   const addMangaChaptersRef = useRef()
@@ -83,6 +91,10 @@ function App() {
   const [firstPage, setFirstPage] = useState(false)
   const [showIndex, toggleShowIndex] = useState(false)
   const [currentUser, setCurrentUser] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [queryTerm, setQueryTerm] = useState("")
+  const [done, setDone] = useState(false)
+  const [availableMangas, setAvailableMangas] = useState([])
 
   useEffect(() => {
     initPage()
@@ -123,6 +135,16 @@ function App() {
 
       pagePreviousRef.current = currentPage;
     }
+  }
+
+  async function getQueryFromSearch(term){
+    let queryTerm;
+    for (const manga of availableMangas) {
+      if(manga.label === term){
+        queryTerm = manga.id
+      }
+    }
+    return queryTerm
   }
 
   async function signup(){
@@ -172,7 +194,9 @@ function App() {
       return axios.get(`${BACKENDHOST}/`, {
       })
       .then(response => {
-          addManga(response.data.posters.concat(mangas))
+          //setManga([])
+          //addManga([{id: "addManga", name:"addManga", poster: plusmanga}])
+          addManga([...response.data.posters, {id: "addManga", name:"addManga", poster: plusmanga}])
           if(response.data.state.currentChapter){
             setChapter(response.data.state.currentChapter)
             setCurrentChapterNumber(response.data.state.currentChapterNumber)
@@ -184,6 +208,8 @@ function App() {
           setCurrentUser(response.data.username)
           setVisibleLogin(false)
           setVisibleLogout(true)
+          setAvailableMangas(response.data.availableMangas)
+          setDone(true)
       })
       .catch( error => {
           setChapter({})
@@ -201,7 +227,11 @@ function App() {
   }
 
   async function addNewManga(){
-    const mangaName = addMangaRef.current.value
+    const mangaName = await getQueryFromSearch(searchTerm)
+    if(!mangaName){
+      console.log("Wrong mangaName: " + mangaName)
+      return
+    }
     const addMangaChapters = addMangaChaptersRef.current.value
     if (mangaName === ""){console.log("empty manga name in add manga"); return}
     return axios.post(`${BACKENDHOST}/addManga`, {
@@ -209,8 +239,8 @@ function App() {
       "chapters": addMangaChapters
     }).then(response => {
       if(response.data !== "success"){
-        mangas.pop()
-        addManga([...mangas, response.data.metaData, {id: "addManga", name:"addManga", poster: plusmanga}])
+        firstPageLoadRef.current = true
+        initPage()
       }
     })
   }
@@ -312,11 +342,34 @@ function App() {
       <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
     </div>
 
-    
-
     <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)}>
-      <input ref={addMangaRef} placeholder={"Manga"}></input>
-      <input ref={addMangaChaptersRef} placeholder={"ChapterRange (a-b)"}></input>
+    {done && <Autocomplete
+        items={availableMangas}
+        shouldItemRender={(item, value) => item.label.toLowerCase().indexOf(value.toLowerCase()) > -1 && value.length > 2}
+        getItemValue={item => item.label}
+        renderItem={(item, highlighted) =>
+          <div
+            key={item.id}
+            style={{ backgroundColor: highlighted ? '#eee' : 'transparent'}}
+          >
+            {item.label}
+          </div>
+        }
+        renderInput={function(props) {
+          return <input placeholder="MangaName" {...props} />
+        }}
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        onSelect={(value, item) => {setSearchTerm(value); setQueryTerm(item.id)}}
+        menuStyle={dropDownStyle}
+        sortItems={(a, b, value) => {return a.label.length - b.label.length}}
+        renderMenu={
+          function(items, value, style) {
+            return <div style={{ ...style, ...this.menuStyle }} children={items.slice(0,10)}/>
+          }
+        }
+        />}
+      <input ref={addMangaChaptersRef} placeholder={"Chapters (a-b, latest, first)"}></input>
     </AddMangaModal>
 
     <SignupModal signup={signup} signin={signin} open={isOpenSignup} onClose={() => setOpenSignup(false)}>
@@ -340,7 +393,7 @@ function App() {
         const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
         return <button ref={ref} style={{backgroundColor:color, cursor: "pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>
       })}
-      <button class="button-31" key={"addChapters"} style={{cursor: "pointer"}} onClick={() => addChapters()}>Add 10 Chapters </button>
+      <button class="button-31" key={"addChapters"} style={{cursor: "pointer"}} onClick={() => addChapters()}>Add Chapters </button>
       </div>
       </div>
       {lastPage &&<>
@@ -358,7 +411,7 @@ function App() {
             const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
             return <button ref={ref} style={{backgroundColor:color, cursor:"pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
           })}
-          <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add 10 Chapters </button>  
+          <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>  
           </div>
           </div>
       </>}
