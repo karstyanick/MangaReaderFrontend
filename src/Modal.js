@@ -16,7 +16,6 @@ const MODAL_STYLES_2 = {
     position: "fixed",
     zIndex: 1000,
     top: "50%",
-    transform: "translate(0,-50%)",
     display: "flex",
     "justify-content": "center",
     "flex-direction": "row-reverse",

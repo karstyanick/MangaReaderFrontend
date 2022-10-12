@@ -5,10 +5,11 @@ import "../node_modules/react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal, SignupModal} from "./Modal"
 import plusmanga from "./plusmanga.png"
 import Autocomplete from "react-autocomplete"
+
 axios.defaults.withCredentials = true
 
-//let BACKENDHOST = "https://mangareaderbackend.lol"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://mangareaderbackend.lol"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"300px",
@@ -62,6 +63,7 @@ const dropDownStyle = {
 
 function App() {
   let imageGallery;
+  let clickTimeout = null
 
   const addMangaRef = useRef()
   const addMangaChaptersRef = useRef()
@@ -95,6 +97,7 @@ function App() {
   const [queryTerm, setQueryTerm] = useState("")
   const [done, setDone] = useState(false)
   const [availableMangas, setAvailableMangas] = useState([])
+  const [fullScreen, setFullScreen] = useState(false)
 
   useEffect(() => {
     initPage()
@@ -326,6 +329,31 @@ function App() {
     }
   }
 
+  function handleClicks () {
+    if (clickTimeout !== null) {
+      console.log('double click executes')
+
+      if(!fullScreen){
+        imageGallery.fullScreen()
+        setFullScreen(true)
+      }else{
+        imageGallery.exitFullScreen()
+        setFullScreen(false)
+      }
+
+      clearTimeout(clickTimeout)
+      clickTimeout = null
+    } else {
+      console.log('single click')
+      clickTimeout = setTimeout(()=>{
+      console.log('first click executes ')
+      toggleShowIndex(!showIndex)
+      clearTimeout(clickTimeout)
+        clickTimeout = null
+      }, 250)
+    }
+  }
+
   return (
     <>
 
@@ -383,7 +411,7 @@ function App() {
         </>
       }
       <div>
-      <ImageGallery lazyLoad={true} style={{cursor: "pointer"}} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> toggleShowIndex(!showIndex)} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
+      <ImageGallery lazyLoad={true} style={{top:"50%", right:"50%", transform: "translate(-50%,-50%)", cursor: "pointer"}} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
       </div>
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>

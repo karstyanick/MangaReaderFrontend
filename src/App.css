@@ -27,6 +27,12 @@
   width: 100%;
 }
 
+.image-gallery-content {
+  position: relative;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
 .button-31:hover,
 .button-31:focus {
   opacity: .75;
@@ -75,6 +81,7 @@ html {
   flex-direction: column;
   margin-top: 40px;
   margin-bottom: 40px;
+  transform: translate(0, -50%);
 }
 
 
@@ -84,6 +91,7 @@ html {
   height: 500px;
   overflow: auto;
   margin-right: -50px;
+  transform: translate(0, -50%)
 }
 
 .hiddenbutton {
