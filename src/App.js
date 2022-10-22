@@ -30,7 +30,6 @@ const navChaptersRight = {
   width: "40px",
   display: "flex",
   "justifyContent": "center",
-  top: "50%",
   transform: "translate(0, -50%)",
   "z-index": "1200",
   position: "absolute",
@@ -43,7 +42,6 @@ const navChaptersLeft = {
   width: "40px",
   display: "flex",
   "justifyContent": "center",
-  top: "50%",
   transform: "translate(0, -50%)",
   "z-index": "1200",
   position: "absolute",
@@ -98,6 +96,7 @@ function App() {
   const [done, setDone] = useState(false)
   const [availableMangas, setAvailableMangas] = useState([])
   const [fullScreen, setFullScreen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     initPage()
@@ -231,6 +230,7 @@ function App() {
 
   async function addNewManga(){
     const mangaName = await getQueryFromSearch(searchTerm)
+    setLoading(true)
     if(!mangaName){
       console.log("Wrong mangaName: " + mangaName)
       return
@@ -241,21 +241,23 @@ function App() {
       "name": mangaName,
       "chapters": addMangaChapters
     }).then(response => {
-      if(response.data !== "success"){
+        setLoading(false)
         firstPageLoadRef.current = true
         initPage()
-      }
+        setOpenAddManga(false)
     })
   }
 
   async function addChapters(){
     const mangaName = currentManga
     const newChapters = `${manga.at(-1)}-${parseInt(manga.at(-1))+10}`
-    
+    setLoading(true)
+
     return axios.post(`${BACKENDHOST}/addManga`, {
       "name": mangaName,
       "chapters": newChapters
     }).then(response => {
+      setLoading(false)
       setManga(response.data.chapters)
     })
   }
@@ -370,7 +372,7 @@ function App() {
       <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
     </div>
 
-    <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)}>
+    <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)} loading={loading}>
     {done && <Autocomplete
         items={availableMangas}
         shouldItemRender={(item, value) => item.label.toLowerCase().indexOf(value.toLowerCase()) > -1 && value.length > 2}
@@ -421,7 +423,16 @@ function App() {
         const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
         return <button ref={ref} style={{backgroundColor:color, cursor: "pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>
       })}
-      <button class="button-31" key={"addChapters"} style={{cursor: "pointer"}} onClick={() => addChapters()}>Add Chapters </button>
+      {loading &&<>
+        <div class= "loadingBox">
+        <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+        </div>
+        </>
+      }
+      {!loading &&<>
+        <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>
+        </>
+      }
       </div>
       </div>
       {lastPage &&<>
@@ -439,7 +450,16 @@ function App() {
             const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
             return <button ref={ref} style={{backgroundColor:color, cursor:"pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
           })}
-          <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>  
+          {loading &&<>
+            <div class= "loadingBox">
+            <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+            </>
+          }
+          {!loading &&<>
+            <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>
+            </>
+          }
           </div>
           </div>
       </>}

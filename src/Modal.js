@@ -21,7 +21,7 @@ const MODAL_STYLES_2 = {
     "flex-direction": "row-reverse",
     width: "100%",
     right: "0px",
-    "max-height": "100%",
+    "max-height": "calc(100vh - 80px)",
     "align-content": "center"
 }
 
@@ -45,7 +45,7 @@ const OVERLAY_STYLES = {
 
 
 
-export function AddMangaModal({addManga, open, children, onClose}) {
+export function AddMangaModal({addManga, open, children, onClose, loading}) {
 
     if(!open) return null
 
@@ -55,7 +55,16 @@ export function AddMangaModal({addManga, open, children, onClose}) {
             <button class={"button-31"} style={CLOSE_STYLES} onClick={onClose}>Close</button>
             <div style={MODAL_STYLES_1}>
                 {children}
-                <button class={"button-31"} style={{"margin-top": "5px"}} onClick={addManga}>Confirm</button>
+                {loading &&<>
+                    <div class= "loadingBox">
+                    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                    </div>
+                    </>
+                }
+                {!loading &&<>
+                    <button class={"button-31"} style={{"margin-top": "5px"}} onClick={addManga}>Confirm</button>
+                    </>
+                }
             </div>
         </>,
         document.getElementById("portal")
