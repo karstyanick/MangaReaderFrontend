@@ -5,14 +5,17 @@ import "../node_modules/react-image-gallery/styles/css/image-gallery.css"
 import {AddMangaModal, ReadMangaModal, SignupModal} from "./Modal"
 import plusmanga from "./plusmanga.png"
 import Autocomplete from "react-autocomplete"
+import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://mangareaderbackend.lol"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://mangareaderbackend.lol"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
-  height:"300px",
+  height:"225px",
+  width:"150px",
   margin:"10px",
   "borderRadius": "10px",
   cursor: "pointer"
@@ -20,7 +23,7 @@ const imgStyles = {
 
 const authButtonStyles = {
   width: "100px",
-  "min-height": "30px",
+  "min-height": "34px",
   padding: "0",
   cursor: "pointer"
 }
@@ -77,7 +80,7 @@ function App() {
 
   const [chapter, setChapter] = useState({})
   const [chapterNumber, setCurrentChapterNumber] = useState({})
-  const [mangas, addManga] = useState([{id: "addManga", name:"addManga", poster: plusmanga}])
+  const [mangas, addManga] = useState([])
   const [manga, setManga] = useState([])
   const [currentManga, setCurrentManga] = useState("")
   const [currentPage, setCurrentPage] = useState({})
@@ -216,7 +219,7 @@ function App() {
       .catch( error => {
           setChapter({})
           setCurrentChapterNumber({})
-          addManga([{id: "addManga", name:"addManga", poster: plusmanga}])
+          addManga([])
           setManga([])
           setCurrentManga("")
           setCurrentPage({})
@@ -358,19 +361,21 @@ function App() {
 
   return (
     <>
-
     <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
-      <div style={{display: "flex", flexDirection: "row"}}>
-        {visibleLogin && 
-          <button class="button-31" style={{...authButtonStyles}} onClick={() => setOpenSignup(true)}>Sing in</button>
-        }
+      <div style={{display: "flex", flexDirection: "row", width:"100%", justifyContent:"center", backgroundColor:"cornflowerblue", position:"fixed", borderBottomLeftRadius:"5px", borderBottomRightRadius:"5px"}}>
         <span style={{ fontSize: "30px", color: "white" }}>{currentUser}</span>
         {visibleLogout &&
-          <button class="button-31" style={{...authButtonStyles, right: "10px", position:"absolute"}} onClick={() => logout()}>Log out</button>
+          <button class="button-31" style={{...authButtonStyles, width:"38px", right: "0", position:"absolute", backgroundColor:"#4c88f3"}} onClick={() => logout()}>
+            <FontAwesomeIcon icon={faRightFromBracket} style={{left: "50%", position: "absolute", transform: "translate(-50%, -50%)"}}/>
+          </button>
         }
       </div>
       <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
     </div>
+
+    {visibleLogin && 
+          <button class="button-31" style={{...authButtonStyles, top: "50%", transform: "translate(-50%,-50%)", position:"absolute", left:"50%"}} onClick={() => setOpenSignup(true)}>Sign in</button>
+    }
 
     <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)} loading={loading}>
     {done && <Autocomplete

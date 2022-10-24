@@ -10,4 +10,4 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
-document.body.style = 'background: #565656;';
+document.body.style = 'background: #565656; margin: 0';
