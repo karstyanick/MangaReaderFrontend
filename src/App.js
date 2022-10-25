@@ -14,8 +14,8 @@ import { useLongPress } from 'use-long-press';
 
 axios.defaults.withCredentials = true
 
-//let BACKENDHOST = "https://mangareaderbackend.lol"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://mangareaderbackend.lol"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -374,9 +374,11 @@ function App() {
     }
   }
 
-  const bind = useLongPress(() => {
-    setLongPressed(!longpressed)
-  }, {threshold: 600, cancelOnMovement: 10});
+  const callback = React.useCallback(() => {
+    setLongPressed(!longpressed);
+  }, [longpressed]);
+
+  const bind = useLongPress(callback, {threshold: 600, cancelOnMovement: true});
 
   return (
     <>
