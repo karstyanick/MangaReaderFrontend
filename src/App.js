@@ -6,12 +6,16 @@ import {AddMangaModal, ReadMangaModal, SignupModal} from "./Modal"
 import plusmanga from "./plusmanga.png"
 import Autocomplete from "react-autocomplete"
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faDeleteLeft } from "@fortawesome/free-solid-svg-icons";
+import { faRemove } from "@fortawesome/free-solid-svg-icons";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useLongPress } from 'use-long-press';
 
 axios.defaults.withCredentials = true
 
-//let BACKENDHOST = "https://mangareaderbackend.lol"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://mangareaderbackend.lol"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -100,6 +104,7 @@ function App() {
   const [availableMangas, setAvailableMangas] = useState([])
   const [fullScreen, setFullScreen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [longpressed, setLongPressed] = useState(false)
 
   useEffect(() => {
     initPage()
@@ -276,6 +281,15 @@ function App() {
     })
   }
 
+  async function deleteManga(mangaName){
+    return axios.post(`${BACKENDHOST}/deleteManga`, {
+      "name": mangaName,
+    }).then(response => {
+        firstPageLoadRef.current = true
+        initPage()
+    })
+  }
+
   async function getChapter(mangaName, chapterToGet){
     if (chapterToGet === "")return
     return axios.get(`${BACKENDHOST}/getChapter`, {
@@ -337,7 +351,6 @@ function App() {
   function handleClicks () {
     if (clickTimeout !== null) {
       console.log('double click executes')
-
       if(!fullScreen){
         imageGallery.fullScreen()
         setFullScreen(true)
@@ -349,6 +362,7 @@ function App() {
       clearTimeout(clickTimeout)
       clickTimeout = null
     } else {
+      navigator.wakeLock.request();
       console.log('single click')
       clickTimeout = setTimeout(()=>{
       console.log('first click executes ')
@@ -358,6 +372,10 @@ function App() {
       }, 250)
     }
   }
+
+  const bind = useLongPress(() => {
+    setLongPressed(!longpressed)
+  }, {threshold: 600, cancelOnMovement: 10});
 
   return (
     <>
@@ -370,7 +388,18 @@ function App() {
           </button>
         }
       </div>
-      <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
+      <div class="posters">
+        {mangas.map(manga => 
+          <div style={{display:"flex"}}>
+            <img style = {imgStyles} onClick={() => openReadManga(manga.name)} {...bind()} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>
+            {(longpressed && manga !== mangas[mangas.length-1]) &&
+              <button style={{height:"30px", width:"45px", "margin-top":"10px", "margin-left": "-45px", backgroundColor:"transparent", border: "none"}} onClick={() => deleteManga(manga.name)}>
+                <FontAwesomeIcon icon={faTrash} size="xl" />
+              </button>
+            }
+          </div>
+        )}
+      </div>
     </div>
 
     {visibleLogin && 

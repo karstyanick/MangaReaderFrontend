@@ -11,3 +11,4 @@ ReactDOM.render(
 );
 
 document.body.style = 'background: #565656; margin: 0';
+document.body.oncontextmenu = function(e) { e.preventDefault(); e.stopPropagation(); }
