@@ -14,8 +14,8 @@ import { useLongPress } from 'use-long-press';
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://mangareaderbackend.lol"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://mangareaderbackend.lol"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -63,7 +63,8 @@ const dropDownStyle = {
   //padding: '2px 0',
   fontSize: '90%',
   overflow: 'auto',
-  maxHeight: '50%', // TODO: don't cheat, let it flow to the bottom
+  maxHeight: '200px', // TODO: don't cheat, let it flow to the bottom
+  maxWidth: "400px"
 }
 
 function App() {
@@ -414,7 +415,7 @@ function App() {
         renderItem={(item, highlighted) =>
           <div
             key={item.id}
-            style={{ backgroundColor: highlighted ? '#eee' : 'transparent'}}
+            style={{ backgroundColor: highlighted ? '#6495ed' : 'transparent'}}
           >
             {item.label}
           </div>
@@ -429,7 +430,7 @@ function App() {
         sortItems={(a, b, value) => {return a.label.length - b.label.length}}
         renderMenu={
           function(items, value, style) {
-            return <div style={{ ...style, ...this.menuStyle }} children={items.slice(0,10)}/>
+            return <div style={{ ...style, ...this.menuStyle }} children={items}/>
           }
         }
         />}
