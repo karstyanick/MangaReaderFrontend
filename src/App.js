@@ -378,7 +378,7 @@ function App() {
     setLongPressed(!longpressed);
   }, [longpressed]);
 
-  const bind = useLongPress(callback, {threshold: 600, cancelOnMovement: true});
+  const bind = useLongPress(callback, {threshold: 550, cancelOnMovement: true});
 
   return (
     <>
