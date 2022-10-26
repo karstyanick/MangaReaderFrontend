@@ -378,11 +378,18 @@ function App() {
     setLongPressed(!longpressed);
   }, [longpressed]);
 
-  const bind = useLongPress(callback, {threshold: 550, cancelOnMovement: true});
+  const bind = useLongPress(callback, {
+    onStart: () => console.log("Press started"),
+    onFinish: () => console.log("Long press finished"),
+    onCancel: () => console.log("Press cancelled"),
+    onMove: () => console.log("Detected mouse or touch movement"),
+    threshold: 550, 
+    cancelOnMovement: true
+  });
 
   return (
     <>
-    <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+    <div style={{display: "flex", flexDirection: "column"}}>
       <div style={{display: "flex", flexDirection: "row", width:"100%", justifyContent:"center", backgroundColor:"cornflowerblue", position:"fixed", borderBottomLeftRadius:"5px", borderBottomRightRadius:"5px"}}>
         <span style={{ fontSize: "30px", color: "white" }}>{currentUser}</span>
         {visibleLogout &&
