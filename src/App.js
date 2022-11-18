@@ -10,8 +10,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 axios.defaults.withCredentials = true
 
-//let BACKENDHOST = "https://mangareaderbackend.lol"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://mangareaderbackend.lol"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -23,7 +23,7 @@ const imgStyles = {
 
 const authButtonStyles = {
   width: "100px",
-  "min-height": "34px",
+  "min-height": "35px",
   padding: "0",
   cursor: "pointer"
 }
@@ -65,6 +65,7 @@ const dropDownStyle = {
 function App() {
   let imageGallery;
   let clickTimeout = null
+  let clickTimeout2 = null
 
   const addMangaRef = useRef()
   const addMangaChaptersRef = useRef()
@@ -100,6 +101,7 @@ function App() {
   const [availableMangas, setAvailableMangas] = useState([])
   const [fullScreen, setFullScreen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [fillScreen, setFillScreen] = useState(true)
 
   useEffect(() => {
     initPage()
@@ -284,6 +286,8 @@ function App() {
         "chapter": chapterToGet
       }
     }).then(response => {
+      //const links = response.data.links.map(link => {return {...link, originalWidth: fillScreen? "max-content": "100%"}})
+      console.log(response.data.links)
       setChapter({...chapter, [mangaName]: response.data.links})
       setCurrentChapterNumber({...chapterNumber, [mangaName]: response.data.chapter})
       setlastPage(false)
@@ -335,27 +339,36 @@ function App() {
   }
 
   function handleClicks () {
-    if (clickTimeout !== null) {
-      console.log('double click executes')
+    if (clickTimeout !== null && clickTimeout2 !== null) {
+      console.log('triple click executes')
 
-      if(!fullScreen){
-        imageGallery.fullScreen()
-        setFullScreen(true)
-      }else{
-        imageGallery.exitFullScreen()
-        setFullScreen(false)
-      }
+      setFillScreen(!fillScreen)
 
       clearTimeout(clickTimeout)
+      clearTimeout(clickTimeout2)
+      clickTimeout2 = null
       clickTimeout = null
-    } else {
+    } else if (clickTimeout !== null) {
+      clickTimeout2 = setTimeout(()=>{
+        if(!fullScreen){
+          imageGallery.fullScreen()
+          setFullScreen(true)
+        }else{
+          imageGallery.exitFullScreen()
+          setFullScreen(false)
+        }
+        clearTimeout(clickTimeout2)
+        clickTimeout2 = null
+      }, 250)
+    }
+    else {
       console.log('single click')
       clickTimeout = setTimeout(()=>{
       console.log('first click executes ')
       toggleShowIndex(!showIndex)
       clearTimeout(clickTimeout)
         clickTimeout = null
-      }, 250)
+      }, 500)
     }
   }
 
@@ -418,7 +431,7 @@ function App() {
         </>
       }
       <div>
-      <ImageGallery lazyLoad={true} style={{top:"50%", right:"50%", transform: "translate(-50%,-50%)", cursor: "pointer"}} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
+      <ImageGallery additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
       </div>
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>

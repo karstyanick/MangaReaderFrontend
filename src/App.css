@@ -53,6 +53,10 @@
   transform: translate(0, -50%);
 }
 
+.fillScreen {
+  width: max-content !important
+}
+
 .button-31:hover,
 .button-31:focus {
   opacity: .75;
@@ -113,10 +117,10 @@ html {
 }
 
 .hiddenbutton {
-  
+
   display: none;
   width: 40px;
-  height: 34px;
+  height: 35px;
   position: fixed;
   left: 0;
   top: 0;

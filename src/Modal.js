@@ -74,7 +74,7 @@ export function ReadMangaModal({children, open, onClose, setVisible}){
             <button class = "button-31 hiddenbutton" onClick={setVisible} style={{borderTopLeftRadius: 0, borderTopRightRadius:0}}>
             <FontAwesomeIcon icon={faBars} />
             </button>
-            <button class={"button-31"} style={{position: "fixed", zIndex: 1000, right: "0%", top:"0%", width: "0px", "minHeight": "0px", "minWidth": "0px", height:"34px", "fontSize": "small", display: "flex", "justifyContent": "center", alignItems:"center", borderTopLeftRadius: 0, borderTopRightRadius:0}} onClick={onClose} >
+            <button class={"button-31"} style={{position: "fixed", zIndex: 1000, right: "0%", top:"0%", width: "0px", "minHeight": "0px", "minWidth": "0px", height:"35px", "fontSize": "small", display: "flex", "justifyContent": "center", alignItems:"center", borderTopLeftRadius: 0, borderTopRightRadius:0}} onClick={onClose} >
             <FontAwesomeIcon icon={faTimes} size="lg" />
             </button>
         </>,
