@@ -18,6 +18,7 @@
     "react-quick-pinch-zoom": "^4.5.0",
     "react-scripts": "5.0.0",
     "react-select-search": "^4.1.0",
+    "use-long-press": "^2.0.2",
     "uuid": "^8.3.2",
     "web-vitals": "^2.1.4"
   },

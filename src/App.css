@@ -142,6 +142,7 @@ html {
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 34px;
+  justify-content: center;
 }
 
 @media (max-width: 828px) {

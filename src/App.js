@@ -6,7 +6,11 @@ import {AddMangaModal, ReadMangaModal, SignupModal} from "./Modal"
 import plusmanga from "./plusmanga.png"
 import Autocomplete from "react-autocomplete"
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faDeleteLeft } from "@fortawesome/free-solid-svg-icons";
+import { faRemove } from "@fortawesome/free-solid-svg-icons";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useLongPress } from 'use-long-press';
 
 axios.defaults.withCredentials = true
 
@@ -59,7 +63,8 @@ const dropDownStyle = {
   //padding: '2px 0',
   fontSize: '90%',
   overflow: 'auto',
-  maxHeight: '50%', // TODO: don't cheat, let it flow to the bottom
+  maxHeight: '200px', // TODO: don't cheat, let it flow to the bottom
+  maxWidth: "400px"
 }
 
 function App() {
@@ -102,6 +107,7 @@ function App() {
   const [fullScreen, setFullScreen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fillScreen, setFillScreen] = useState(true)
+  const [longpressed, setLongPressed] = useState(false)
 
   useEffect(() => {
     initPage()
@@ -278,6 +284,15 @@ function App() {
     })
   }
 
+  async function deleteManga(mangaName){
+    return axios.post(`${BACKENDHOST}/deleteManga`, {
+      "name": mangaName,
+    }).then(response => {
+        firstPageLoadRef.current = true
+        initPage()
+    })
+  }
+
   async function getChapter(mangaName, chapterToGet){
     if (chapterToGet === "")return
     return axios.get(`${BACKENDHOST}/getChapter`, {
@@ -348,6 +363,7 @@ function App() {
       clearTimeout(clickTimeout2)
       clickTimeout2 = null
       clickTimeout = null
+      navigator.wakeLock.request();
     } else if (clickTimeout !== null) {
       clickTimeout2 = setTimeout(()=>{
         if(!fullScreen){
@@ -359,12 +375,14 @@ function App() {
         }
         clearTimeout(clickTimeout2)
         clickTimeout2 = null
+        navigator.wakeLock.request();
       }, 250)
     }
     else {
       console.log('single click')
       clickTimeout = setTimeout(()=>{
       console.log('first click executes ')
+      navigator.wakeLock.request();
       toggleShowIndex(!showIndex)
       clearTimeout(clickTimeout)
         clickTimeout = null
@@ -372,9 +390,22 @@ function App() {
     }
   }
 
+  const callback = React.useCallback(() => {
+    setLongPressed(!longpressed);
+  }, [longpressed]);
+
+  const bind = useLongPress(callback, {
+    onStart: () => console.log("Press started"),
+    onFinish: () => console.log("Long press finished"),
+    onCancel: () => console.log("Press cancelled"),
+    onMove: () => console.log("Detected mouse or touch movement"),
+    threshold: 550, 
+    cancelOnMovement: true
+  });
+
   return (
     <>
-    <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+    <div style={{display: "flex", flexDirection: "column"}}>
       <div style={{display: "flex", flexDirection: "row", width:"100%", justifyContent:"center", backgroundColor:"cornflowerblue", position:"fixed", borderBottomLeftRadius:"5px", borderBottomRightRadius:"5px"}}>
         <span style={{ fontSize: "30px", color: "white" }}>{currentUser}</span>
         {visibleLogout &&
@@ -383,7 +414,18 @@ function App() {
           </button>
         }
       </div>
-      <div class="posters">{mangas.map(manga => <img style = {imgStyles} onClick={() => openReadManga(manga.name)} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>)}</div>
+      <div class="posters">
+        {mangas.map(manga => 
+          <div style={{display:"flex"}}>
+            <img style = {imgStyles} onClick={() => openReadManga(manga.name)} {...bind()} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>
+            {(longpressed && manga !== mangas[mangas.length-1]) &&
+              <button style={{height:"30px", width:"45px", "margin-top":"10px", "margin-left": "-45px", backgroundColor:"transparent", border: "none"}} onClick={() => deleteManga(manga.name)}>
+                <FontAwesomeIcon icon={faTrash} size="xl" />
+              </button>
+            }
+          </div>
+        )}
+      </div>
     </div>
 
     {visibleLogin && 
@@ -398,7 +440,7 @@ function App() {
         renderItem={(item, highlighted) =>
           <div
             key={item.id}
-            style={{ backgroundColor: highlighted ? '#eee' : 'transparent'}}
+            style={{ backgroundColor: highlighted ? '#6495ed' : 'transparent'}}
           >
             {item.label}
           </div>
@@ -413,7 +455,7 @@ function App() {
         sortItems={(a, b, value) => {return a.label.length - b.label.length}}
         renderMenu={
           function(items, value, style) {
-            return <div style={{ ...style, ...this.menuStyle }} children={items.slice(0,10)}/>
+            return <div style={{ ...style, ...this.menuStyle }} children={items}/>
           }
         }
         />}
