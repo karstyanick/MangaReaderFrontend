@@ -1,21 +1,18 @@
-import React, { useState, useRef, useEffect  } from "react";
+import { faRightFromBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from "axios";
-import ImageGallery from 'react-image-gallery';
-import "../node_modules/react-image-gallery/styles/css/image-gallery.css"
-import {AddMangaModal, ReadMangaModal, SignupModal} from "./Modal"
-import plusmanga from "./plusmanga.png"
-import Autocomplete from "react-autocomplete"
-import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
-import { faDeleteLeft } from "@fortawesome/free-solid-svg-icons";
-import { faRemove } from "@fortawesome/free-solid-svg-icons";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useEffect, useRef, useState } from "react";
+import Autocomplete from "react-autocomplete";
 import { useLongPress } from 'use-long-press';
+import "../node_modules/react-image-gallery/styles/css/image-gallery.css";
+import { AddMangaModal, ReadMangaModal, SignupModal } from "./Modal";
+import plusmanga from "./plusmanga.png";
+import ImageGallery from "./image-gallery/ImageGallery"
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://mangareaderbackend.lol"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://mangareaderbackend.lol"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -106,7 +103,7 @@ function App() {
   const [availableMangas, setAvailableMangas] = useState([])
   const [fullScreen, setFullScreen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [fillScreen, setFillScreen] = useState(true)
+  const [fillScreen, setFillScreen] = useState(false)
   const [longpressed, setLongPressed] = useState(false)
 
   useEffect(() => {
@@ -472,9 +469,9 @@ function App() {
         <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)}>&gt;</button>
         </>
       }
-      <div>
-      <ImageGallery additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
-      </div>
+      
+      <ImageGallery flickThreshold={fillScreen? 100: 0.4} zoomed={fillScreen} swipeThreshold={100} additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
+      
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
       <div class = "chapters">
