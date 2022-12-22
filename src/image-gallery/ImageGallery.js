@@ -128,6 +128,7 @@ class ImageGallery extends React.Component {
       thumbnailPosition,
       showThumbnails,
       useWindowKeyDown,
+      zoomed
     } = this.props;
     const { currentIndex, isPlaying } = this.state;
     const itemsSizeChanged = prevProps.items.length !== items.length;
@@ -142,6 +143,10 @@ class ImageGallery extends React.Component {
         this.pause();
         this.play();
       }
+    }
+
+    if(prevProps.zoomed && !zoomed){
+      this.slideToIndex(undefined, undefined, true)
     }
 
     if (thumbnailsPositionChanged) {
@@ -221,6 +226,7 @@ class ImageGallery extends React.Component {
   onSliding() {
     const { currentIndex, isTransitioning } = this.state;
     const { onSlide, slideDuration } = this.props;
+
     this.transitionTimer = window.setTimeout(() => {
       if (isTransitioning) {
         this.setState({
@@ -771,9 +777,15 @@ class ImageGallery extends React.Component {
 
       let x = zoomed ? side === 1? absX + (lastSwipeSlideOffset * galleryWidth / 100) : absX - (lastSwipeSlideOffset * galleryWidth / 100) : absX
 
+      console.log(`galleryWidth ${galleryWidth}`)
+
       let newCurrentSlideOffset = ( x / galleryWidth * 100);
-      if (Math.abs(newCurrentSlideOffset) >= 100) {
-        newCurrentSlideOffset = 100;
+      if (side === 1 && Math.abs(newCurrentSlideOffset) >= 50) {
+        newCurrentSlideOffset = 50;
+        
+      }
+      if(zoomed && side === -1 && Math.abs(newCurrentSlideOffset) >= 0){
+        newCurrentSlideOffset = 0;
       }
 
       console.log(`currentSlideOffset: ${newCurrentSlideOffset}`)
@@ -1105,7 +1117,7 @@ class ImageGallery extends React.Component {
     if (useBrowserFullscreen) this.setState({ isFullscreen });
   }
 
-  slideToIndex(index, event) {
+  slideToIndex(index, event, zero) {
     const { currentIndex, isTransitioning, currentSlideOffset } = this.state;
     const { items, slideDuration, onBeforeSlide, zoomed } = this.props;
 
@@ -1129,6 +1141,8 @@ class ImageGallery extends React.Component {
       if (onBeforeSlide && nextIndex !== currentIndex) {
         onBeforeSlide(nextIndex);
       }
+
+      const slideDuration = zero? { transition: `none` } : { transition: `all ${slideDuration}ms ease-out` }
 
       this.setState({
         previousIndex: currentIndex,
