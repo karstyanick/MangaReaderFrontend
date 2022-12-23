@@ -146,7 +146,7 @@ class ImageGallery extends React.Component {
     }
 
     if(prevProps.zoomed && !zoomed){
-      this.slideToIndex(undefined, undefined, true)
+      this.slideToIndex(this.state.currentIndex, undefined, true)
     }
 
     if (thumbnailsPositionChanged) {
@@ -743,7 +743,7 @@ class ImageGallery extends React.Component {
     return currentIndex < items.length - 1;
   }
 
-  handleSwiping({ event, initial, absX, dir }) {
+  handleSwiping({ event, absX, dir }) {
     const { disableSwipe, stopPropagation, zoomed } = this.props;
     const {
       galleryWidth,
@@ -779,12 +779,19 @@ class ImageGallery extends React.Component {
 
       console.log(`galleryWidth ${galleryWidth}`)
 
+      const maxScroll = 100 - (window.outerWidth / galleryWidth * 100)
+
       let newCurrentSlideOffset = ( x / galleryWidth * 100);
-      if (side === 1 && Math.abs(newCurrentSlideOffset) >= 50) {
-        newCurrentSlideOffset = 50;
+
+      if (side === 1 && Math.abs(newCurrentSlideOffset) >= 100) {
+        newCurrentSlideOffset = 100;
         
       }
-      if(zoomed && side === -1 && Math.abs(newCurrentSlideOffset) >= 0){
+      if (zoomed && side === 1 && newCurrentSlideOffset >= maxScroll) {
+        newCurrentSlideOffset = maxScroll;
+        
+      }
+      if(zoomed && side === -1 && newCurrentSlideOffset >= 0){
         newCurrentSlideOffset = 0;
       }
 
@@ -1142,7 +1149,7 @@ class ImageGallery extends React.Component {
         onBeforeSlide(nextIndex);
       }
 
-      const slideDuration = zero? { transition: `none` } : { transition: `all ${slideDuration}ms ease-out` }
+      const slideStyle = zero? { transition: `none` } : { transition: `all ${slideDuration}ms ease-out` }
 
       this.setState({
         previousIndex: currentIndex,
@@ -1150,7 +1157,7 @@ class ImageGallery extends React.Component {
         isTransitioning: nextIndex !== currentIndex,
         currentSlideOffset: zoomed && nextIndex === currentIndex ? currentSlideOffset: 0,
         lastSwipeSlideOffset: zoomed && nextIndex === currentIndex ? currentSlideOffset: 0,
-        slideStyle: { transition: `all ${slideDuration}ms ease-out` },
+        slideStyle: slideStyle,
       }, this.onSliding);
     }
   }

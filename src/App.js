@@ -464,7 +464,7 @@ function App() {
       <input ref={passwordRef} placeholder={"Password"}></input>
     </SignupModal>
 
-    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> {setVisible(!visible)}}>
+    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> {setVisible(!visible)}} zoomed={fillScreen}>
       {firstPage &&<>
         <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)}>&gt;</button>
         </>

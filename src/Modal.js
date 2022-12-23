@@ -62,13 +62,13 @@ export function AddMangaModal({addManga, open, children, onClose, loading}) {
     )
 }
 
-export function ReadMangaModal({children, open, onClose, setVisible}){
+export function ReadMangaModal({children, open, onClose, setVisible, zoomed}){
     if(!open) return null
 
     return ReactDOM.createPortal(
         <>
             <div style={OVERLAY_STYLES}/>
-            <div class="openMangaWrapper">
+            <div class={zoomed? "openMangaWrapperZoomed" : "openMangaWrapper"}>
                 {children}
             </div>
             <button class = "button-31 hiddenbutton" onClick={setVisible} style={{borderTopLeftRadius: 0, borderTopRightRadius:0}}>
