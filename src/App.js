@@ -11,8 +11,8 @@ import ImageGallery from "./image-gallery/ImageGallery"
 
 axios.defaults.withCredentials = true
 
-//let BACKENDHOST = "https://mangareaderbackend.lol"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://reallfluffy.site"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
