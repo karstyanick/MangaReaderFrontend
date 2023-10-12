@@ -8,11 +8,14 @@ import "../node_modules/react-image-gallery/styles/css/image-gallery.css";
 import { AddMangaModal, ReadMangaModal, SignupModal } from "./Modal";
 import plusmanga from "./plusmanga.png";
 import ImageGallery from "./image-gallery/ImageGallery"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://reallfluffy.site"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://reallfluffy.site"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -239,12 +242,26 @@ function App() {
   async function addNewManga(){
     const mangaName = await getQueryFromSearch(searchTerm)
     setLoading(true)
-    if(!mangaName){
-      console.log("Wrong mangaName: " + mangaName)
+    if(!mangaName){      
+      toast("Make sure the name is in the list", {type: "error"});
+      setLoading(false)
       return
     }
-    const addMangaChapters = addMangaChaptersRef.current.value
-    if (mangaName === ""){console.log("empty manga name in add manga"); return}
+    const addMangaChapters = addMangaChaptersRef.current.value.toLowerCase()
+
+    if(!addMangaChapters.includes("-") || addMangaChapters !== "latest" || addMangaChapters !== "first"){
+      toast("Incorrect input format", {type: "error"})
+      console.log("Incorrect input format")
+      setLoading(false)
+      return
+    }
+
+    if (mangaName === ""){
+      toast("Make sure the name is in the list", {type: "error"});
+      console.log("empty manga name in add manga"); 
+      setLoading(false)
+      return
+    }
     return axios.post(`${BACKENDHOST}/addManga`, {
       "name": mangaName,
       "chapters": addMangaChapters
@@ -456,12 +473,12 @@ function App() {
           }
         }
         />}
-      <input ref={addMangaChaptersRef} placeholder={"Chapters (a-b, latest, first)"}></input>
+      <input ref={addMangaChaptersRef} placeholder={"Chapters (a-b, Latest, First)"}></input>
     </AddMangaModal>
 
     <SignupModal signup={signup} signin={signin} open={isOpenSignup} onClose={() => setOpenSignup(false)}>
       <input ref={usernameRef} placeholder={"Username"}></input>
-      <input ref={passwordRef} placeholder={"Password"}></input>
+      <input ref={passwordRef} type='password' placeholder={"Password"}></input>
     </SignupModal>
 
     <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> {setVisible(!visible)}} zoomed={fillScreen}>
@@ -522,6 +539,7 @@ function App() {
       </>}
     </ReadMangaModal>
     
+    <ToastContainer position="top-right" />
     </>
   )
 }
