@@ -14,8 +14,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://reallfluffy.site"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://reallfluffy.site"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -108,6 +108,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [fillScreen, setFillScreen] = useState(false)
   const [longpressed, setLongPressed] = useState(false)
+  const [currentlyFetching, setCurrentlyFetching] = useState(false)
 
   useEffect(() => {
     initPage()
@@ -200,14 +201,13 @@ function App() {
         "password": password
     }).then(response => {
         if(response.data !== "Wrong password"){
-
-          toast("Username or passowrd incorrect", {type: "error"});
-
           firstPageLoadRef.current = true
           initPage()
           setCurrentUser(response.data)
           setOpenSignup(false)
         }
+
+        toast("Username or passowrd incorrect", {type: "error"});
     })
   }
 
@@ -281,10 +281,19 @@ function App() {
       setLoading(false)
       return
     }
+
+    setCurrentlyFetching(true)
+
     return axios.post(`${BACKENDHOST}/addManga`, {
       "name": mangaName,
       "chapters": addMangaChapters
     }).then(response => {
+
+        if(response.data?.chapters?.lenght === 0){
+          toast("Something went wrong", {type: "error"})
+        }
+
+        setCurrentlyFetching(false)
 
         toast("Manga added", {type: "success"})
 
@@ -300,12 +309,20 @@ function App() {
     const newChapters = `${manga.at(-1)}-${parseInt(manga.at(-1))+10}`
     setLoading(true)
 
+    setCurrentlyFetching(true)
+
     return axios.post(`${BACKENDHOST}/addManga`, {
       "name": mangaName,
       "chapters": newChapters
     }).then(response => {
       
-      toast("Chapters added", {type: "success"})
+      setCurrentlyFetching(false)
+
+      if(manga.length === response.data.chapters.length){
+        toast("No new chapters released", {type: "info"})
+      }else{
+        toast("Chapters added", {type: "success"})
+      }
 
       setLoading(false)
       setManga(response.data.chapters)
@@ -333,6 +350,11 @@ function App() {
   }
 
   async function getChapter(mangaName, chapterToGet){
+    if(currentlyFetching){
+      toast("Please wait until new chapters are retrieved", {type: "info"})
+      return
+    }
+
     if (chapterToGet === "")return
     return axios.get(`${BACKENDHOST}/getChapter`, {
       params:{
@@ -353,6 +375,12 @@ function App() {
   }
 
   async function onCloseModal(){
+
+    if(currentlyFetching){
+      toast("Please wait until new chapters are retrieved", {type: "info"})
+      return
+    }
+
     setOpenReadManga(false)
     setVisible(false)
     setCurrentPage({...currentPage, [currentManga]: imageGallery.getCurrentIndex()})
@@ -361,6 +389,12 @@ function App() {
   }
 
   async function openReadManga(name){
+
+    if(currentlyFetching){
+      toast("Please wait until new manga is added", {type: "info"})
+      return
+    }
+
     console.log("called")
     if(name === "addManga"){
       setOpenAddManga(true)
@@ -568,7 +602,7 @@ function App() {
       </>}
     </ReadMangaModal>
     
-    <ToastContainer position="top-right" />
+    <ToastContainer position="top-right" theme="dark" autoClose={5000}/>
     </>
   )
 }
