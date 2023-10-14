@@ -200,14 +200,15 @@ function App() {
         "username": username,
         "password": password
     }).then(response => {
-        if(response.data !== "Wrong password"){
-          firstPageLoadRef.current = true
-          initPage()
-          setCurrentUser(response.data)
-          setOpenSignup(false)
+        if(response.data === "Wrong password"){
+          toast("Username or passowrd incorrect", {type: "error"});
+          return
         }
 
-        toast("Username or passowrd incorrect", {type: "error"});
+        firstPageLoadRef.current = true
+        initPage()
+        setCurrentUser(response.data)
+        setOpenSignup(false)
     })
   }
 
