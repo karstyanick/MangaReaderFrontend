@@ -14,8 +14,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 axios.defaults.withCredentials = true
 
-//let BACKENDHOST = "https://reallfluffy.site"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://reallfluffy.site"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -164,6 +164,14 @@ function App() {
     const username = usernameRef.current.value
     const password = passwordRef.current.value
 
+    if(!username){
+      toast("Please enter a username", {type: "error"});
+    }
+
+    if(!password){
+      toast("Please enter a password", {type: "error"});
+    }
+
     return axios.post(`${BACKENDHOST}/signup`, {
         "username": username,
         "password": password
@@ -179,11 +187,22 @@ function App() {
     const username = usernameRef.current.value
     const password = passwordRef.current.value
 
+    if(!username){
+      toast("Please enter a username", {type: "error"});
+    }
+
+    if(!password){
+      toast("Please enter a password", {type: "error"});
+    }
+
     return axios.post(`${BACKENDHOST}/login`, {
         "username": username,
         "password": password
     }).then(response => {
         if(response.data !== "Wrong password"){
+
+          toast("Username or passowrd incorrect", {type: "error"});
+
           firstPageLoadRef.current = true
           initPage()
           setCurrentUser(response.data)
@@ -249,7 +268,7 @@ function App() {
     }
     const addMangaChapters = addMangaChaptersRef.current.value.toLowerCase()
 
-    if(!addMangaChapters.includes("-") || addMangaChapters !== "latest" || addMangaChapters !== "first"){
+    if(!addMangaChapters.includes("-") && addMangaChapters !== "latest" && addMangaChapters !== "first"){
       toast("Incorrect input format", {type: "error"})
       console.log("Incorrect input format")
       setLoading(false)
@@ -266,6 +285,9 @@ function App() {
       "name": mangaName,
       "chapters": addMangaChapters
     }).then(response => {
+
+        toast("Manga added", {type: "success"})
+
         setLoading(false)
         firstPageLoadRef.current = true
         initPage()
@@ -282,6 +304,9 @@ function App() {
       "name": mangaName,
       "chapters": newChapters
     }).then(response => {
+      
+      toast("Chapters added", {type: "success"})
+
       setLoading(false)
       setManga(response.data.chapters)
     })
@@ -315,11 +340,15 @@ function App() {
         "chapter": chapterToGet
       }
     }).then(response => {
-      //const links = response.data.links.map(link => {return {...link, originalWidth: fillScreen? "max-content": "100%"}})
-      console.log(response.data.links)
-      setChapter({...chapter, [mangaName]: response.data.links})
-      setCurrentChapterNumber({...chapterNumber, [mangaName]: response.data.chapter})
-      setlastPage(false)
+
+      if(!response?.data?.links){
+        toast("Please retrieve further chapters", {type: "error"});
+      }else{
+        console.log(response.data.links)
+        setChapter({...chapter, [mangaName]: response.data.links})
+        setCurrentChapterNumber({...chapterNumber, [mangaName]: response.data.chapter})
+        setlastPage(false)
+      }
     })
   }
 
