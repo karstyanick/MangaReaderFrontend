@@ -11,7 +11,6 @@ import ImageGallery from "./image-gallery/ImageGallery"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-
 axios.defaults.withCredentials = true
 
 let BACKENDHOST = "https://reallfluffy.site"
@@ -109,6 +108,7 @@ function App() {
   const [fillScreen, setFillScreen] = useState(false)
   const [longpressed, setLongPressed] = useState(false)
   const [currentlyFetching, setCurrentlyFetching] = useState(false)
+  const [decryptionKey, setDecryptionKey] = useState("")
 
   useEffect(() => {
     initPage()
@@ -137,20 +137,6 @@ function App() {
     }
   }
 
-  function saveState(currentPage, chapter, currentManga) {
-
-    if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
-      axios.post(`${BACKENDHOST}/save`, {
-        "name": currentManga,
-        "chapterNumber": chapterNumber,
-        "chapter": chapter,
-        "page": currentPage
-      })
-
-      pagePreviousRef.current = currentPage;
-    }
-  }
-
   async function getQueryFromSearch(term){
     let queryTerm;
     for (const manga of availableMangas) {
@@ -159,6 +145,35 @@ function App() {
       }
     }
     return queryTerm
+  }
+
+  const axiosInstance = axios.create({
+    baseURL: BACKENDHOST
+  });
+
+  axiosInstance.interceptors.request.use(
+    (config) => {
+      config.headers = {
+        'Authorization': localStorage.getItem("jwt") || ""
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+  });
+
+  function saveState(currentPage, chapter, currentManga) {
+
+    if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
+      axiosInstance.post(`/save`, {
+        "name": currentManga,
+        "chapterNumber": chapterNumber,
+        "chapter": chapter,
+        "page": currentPage
+      })
+
+      pagePreviousRef.current = currentPage;
+    }
   }
 
   async function signup(){
@@ -173,16 +188,54 @@ function App() {
       toast("Please enter a password", {type: "error"});
     }
 
-    return axios.post(`${BACKENDHOST}/signup`, {
+
+    return axiosInstance.post(`/signup`, {
         "username": username,
         "password": password
-    }).then(response => {
+    }).then(async response => {
         firstPageLoadRef.current = true
+        //encryptAndSaveToken(response.data.token)
+        saveToken(response.data.token)
         initPage()
-        setCurrentUser(response.data)
+        setCurrentUser(response.data.username)
         setOpenSignup(false)
     })
   }
+
+  function saveToken(token){
+    localStorage.setItem("jwt", token);
+  }
+
+/*   async function encryptAndSaveToken(token){
+    const key = await window.crypto.subtle.generateKey(
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      true,
+      ["encrypt", "decrypt"]
+    );
+
+    const encodedToken = new TextEncoder().encode(token);
+    const encryptedToken = await window.crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: new Uint8Array(12),
+      },
+      key,
+      encodedToken
+    );
+    saveKeyForUser(key)
+    sessionStorage.setItem("encryptedToken", new Uint8Array(encryptedToken));
+  }
+
+  async function saveKeyForUser(key){
+    setDecryptionKey(key)
+
+    axiosInstance.post(`/saveDecryptionKey`,{
+      decryptionKey: key
+    })
+  } */
 
   async function signin(){
     const username = usernameRef.current.value
@@ -196,35 +249,37 @@ function App() {
       toast("Please enter a password", {type: "error"});
     }
 
-    return axios.post(`${BACKENDHOST}/login`, {
+    return axiosInstance.post(`/login`, {
         "username": username,
         "password": password
-    }).then(response => {
+    }).then(async response => {
         if(response.data === "Wrong password"){
           toast("Username or passowrd incorrect", {type: "error"});
           return
         }
-
+        //encryptAndSaveToken(response.data.token)
+        saveToken(response.data.token)
         firstPageLoadRef.current = true
         initPage()
-        setCurrentUser(response.data)
+        setCurrentUser(response.data.username)
         setOpenSignup(false)
     })
   }
 
   async function logout(){
-    return axios.post(`${BACKENDHOST}/logout`,{
+    return axiosInstance.post(`/logout`,{
     }).then(response => {
+      localStorage.removeItem("jwt")
       firstPageLoadRef.current = true
       setCurrentUser("")
       initPage()
     })
   }
 
-  async function initPage(){
+  async function initPage(key){
     if(firstPageLoadRef.current === true){
       firstPageLoadRef.current = false
-      return axios.get(`${BACKENDHOST}/`, {
+      return axiosInstance.get(`/`, {
       })
       .then(response => {
           //setManga([])
@@ -285,7 +340,7 @@ function App() {
 
     setCurrentlyFetching(true)
 
-    return axios.post(`${BACKENDHOST}/addManga`, {
+    return axiosInstance.post(`/addManga`, {
       "name": mangaName,
       "chapters": addMangaChapters
     }).then(response => {
@@ -312,7 +367,7 @@ function App() {
 
     setCurrentlyFetching(true)
 
-    return axios.post(`${BACKENDHOST}/addManga`, {
+    return axiosInstance.post(`/addManga`, {
       "name": mangaName,
       "chapters": newChapters
     }).then(response => {
@@ -332,7 +387,7 @@ function App() {
 
   async function getManga(mangaName){
     if (mangaName === ""){console.log("empty manga name in get manga"); return}
-    return axios.get(`${BACKENDHOST}/getManga`, {
+    return axiosInstance.get(`/getManga`, {
       params:{
         "name": mangaName,
       }
@@ -342,7 +397,7 @@ function App() {
   }
 
   async function deleteManga(mangaName){
-    return axios.post(`${BACKENDHOST}/deleteManga`, {
+    return axiosInstance.post(`/deleteManga`, {
       "name": mangaName,
     }).then(response => {
         firstPageLoadRef.current = true
@@ -357,7 +412,7 @@ function App() {
     }
 
     if (chapterToGet === "")return
-    return axios.get(`${BACKENDHOST}/getChapter`, {
+    return axiosInstance.get(`/getChapter`, {
       params:{
         "name": mangaName,
         "chapter": chapterToGet
