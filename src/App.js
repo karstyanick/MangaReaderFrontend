@@ -10,11 +10,12 @@ import plusmanga from "./plusmanga.png";
 import ImageGallery from "./image-gallery/ImageGallery"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CustomImageGallery from './custom-image-gallery/image-gallery';
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://reallfluffy.site"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://reallfluffy.site"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -108,7 +109,7 @@ function App() {
   const [fillScreen, setFillScreen] = useState(false)
   const [longpressed, setLongPressed] = useState(false)
   const [currentlyFetching, setCurrentlyFetching] = useState(false)
-  const [decryptionKey, setDecryptionKey] = useState("")
+  const [scrollDirection, setScrollDirection] = useState("horizontal")
 
   useEffect(() => {
     initPage()
@@ -194,7 +195,6 @@ function App() {
         "password": password
     }).then(async response => {
         firstPageLoadRef.current = true
-        //encryptAndSaveToken(response.data.token)
         saveToken(response.data.token)
         initPage()
         setCurrentUser(response.data.username)
@@ -205,37 +205,6 @@ function App() {
   function saveToken(token){
     localStorage.setItem("jwt", token);
   }
-
-/*   async function encryptAndSaveToken(token){
-    const key = await window.crypto.subtle.generateKey(
-      {
-        name: "AES-GCM",
-        length: 256,
-      },
-      true,
-      ["encrypt", "decrypt"]
-    );
-
-    const encodedToken = new TextEncoder().encode(token);
-    const encryptedToken = await window.crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv: new Uint8Array(12),
-      },
-      key,
-      encodedToken
-    );
-    saveKeyForUser(key)
-    sessionStorage.setItem("encryptedToken", new Uint8Array(encryptedToken));
-  }
-
-  async function saveKeyForUser(key){
-    setDecryptionKey(key)
-
-    axiosInstance.post(`/saveDecryptionKey`,{
-      decryptionKey: key
-    })
-  } */
 
   async function signin(){
     const username = usernameRef.current.value
@@ -257,7 +226,6 @@ function App() {
           toast("Username or passowrd incorrect", {type: "error"});
           return
         }
-        //encryptAndSaveToken(response.data.token)
         saveToken(response.data.token)
         firstPageLoadRef.current = true
         initPage()
@@ -282,8 +250,6 @@ function App() {
       return axiosInstance.get(`/`, {
       })
       .then(response => {
-          //setManga([])
-          //addManga([{id: "addManga", name:"addManga", poster: plusmanga}])
           addManga([...response.data.posters, {id: "addManga", name:"addManga", poster: plusmanga}])
           if(response.data.state.currentChapter){
             setChapter(response.data.state.currentChapter)
@@ -300,6 +266,11 @@ function App() {
           setDone(true)
       })
       .catch( error => {
+
+          if(error.message === "Expired token" || error.message === "Forbidden error. Token could not be verified"){
+            localStorage.removeItem("jwt")
+          }
+
           setChapter({})
           setCurrentChapterNumber({})
           addManga([])
@@ -536,6 +507,14 @@ function App() {
     cancelOnMovement: true
   });
 
+  const handleScrollDirectionChange = () => {
+    if(scrollDirection === "horizontal"){
+      setScrollDirection("vertical")
+    }else{
+      setScrollDirection("horizontal")
+    }
+  }
+
   return (
     <>
     <div style={{display: "flex", flexDirection: "column"}}>
@@ -600,14 +579,16 @@ function App() {
       <input ref={passwordRef} type='password' placeholder={"Password"}></input>
     </SignupModal>
 
-    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> {setVisible(!visible)}} zoomed={fillScreen}>
+    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> {setVisible(!visible)}} zoomed={fillScreen} setScrollDirection={handleScrollDirectionChange}>
       {firstPage &&<>
         <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)}>&gt;</button>
         </>
       }
       
-      <ImageGallery flickThreshold={fillScreen? 100: 0.4} zoomed={fillScreen} swipeThreshold={100} additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
-      
+      {//<ImageGallery flickThreshold={fillScreen? 100: 0.4} zoomed={fillScreen} swipeThreshold={100} additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
+      }
+      <CustomImageGallery onClick={() => handleClicks()} fillScreen={fillScreen} images={chapter[currentManga]} scrollDirection={scrollDirection}></CustomImageGallery>
+
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
       <div class = "chapters">
