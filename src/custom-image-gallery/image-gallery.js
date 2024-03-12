@@ -28,7 +28,6 @@ const ImageGallery = ({ images, scrollDirection, fillScreen, onClick }) => {
             const imageHtmlElement = imageRefs.current[index];
 
             const ratio = imageHtmlElement.naturalWidth / imageHtmlElement.naturalHeight;
-
             const newWidth = (window.innerHeight - 80) * ratio;
 
             if (imageHtmlElement.naturalWidth > 0) {
@@ -42,8 +41,8 @@ const ImageGallery = ({ images, scrollDirection, fillScreen, onClick }) => {
             setShowLoading(false);
 
             const ratio = imageRefs.current[0].naturalWidth / imageRefs.current[0].naturalHeight;
-
             const newWidth = (window.innerHeight - 80) * ratio;
+            
             setCurrentImageWidth(newWidth);
         }
     };
