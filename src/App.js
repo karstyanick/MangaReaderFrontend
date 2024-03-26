@@ -1,4 +1,4 @@
-import { faRightFromBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faArrowsUpDown, faRightFromBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
@@ -7,15 +7,14 @@ import { useLongPress } from 'use-long-press';
 import "../node_modules/react-image-gallery/styles/css/image-gallery.css";
 import { AddMangaModal, ReadMangaModal, SignupModal } from "./Modal";
 import plusmanga from "./plusmanga.png";
-import ImageGallery from "./image-gallery/ImageGallery"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomImageGallery from './custom-image-gallery/image-gallery';
 
 axios.defaults.withCredentials = true
 
-//let BACKENDHOST = "https://reallfluffy.site"
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://reallfluffy.site"
+//let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height:"225px",
@@ -68,7 +67,6 @@ const dropDownStyle = {
 }
 
 function App() {
-  let imageGallery;
   let clickTimeout = null
   let clickTimeout2 = null
 
@@ -81,6 +79,7 @@ function App() {
   const scrollRef = useRef()
 
   const pagePreviousRef = useRef({});
+  const scrollPreviousRef = useRef({});
   const isOpenReadMangaPreviousRef = useRef(false)
   const firstPageLoadRef = useRef(true)
 
@@ -90,6 +89,7 @@ function App() {
   const [manga, setManga] = useState([])
   const [currentManga, setCurrentManga] = useState("")
   const [currentPage, setCurrentPage] = useState({})
+  const [currentOffset, setCurrentOffset] = useState({})
   const [isOpenSignup, setOpenSignup] = useState(false)
   const [isOpenAddManga, setOpenAddManga] = useState(false)
   const [isOpenReadManga, setOpenReadManga] = useState(false)
@@ -113,19 +113,10 @@ function App() {
 
   useEffect(() => {
     initPage()
-    saveState(currentPage, chapter, currentManga)
-    slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga)
+    saveState(chapter, currentManga, currentPage, currentOffset)
     slideToChapter(visible, isOpenReadManga)
-  }, [currentPage, chapter, currentManga, isOpenReadManga, imageGallery, visible])
+  }, [currentPage, currentOffset, chapter, currentManga, isOpenReadManga, visible])
 
-  function slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga){
-    if(isOpenReadManga !== isOpenReadMangaPreviousRef.current){
-      if(imageGallery){
-        imageGallery.slideToIndex(currentPage[currentManga])
-      }
-      isOpenReadMangaPreviousRef.current = isOpenReadManga;
-    }
-  }
 
   function slideToChapter(visible, isOpenReadManga){
     if(visible){
@@ -163,18 +154,25 @@ function App() {
       return Promise.reject(error);
   });
 
-  function saveState(currentPage, chapter, currentManga) {
+  function saveState(chapter, currentManga, currentPage, currentScrollOffset) {
 
-    if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
+    if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current) || JSON.stringify(currentScrollOffset) !== JSON.stringify(scrollPreviousRef.current)){
       axiosInstance.post(`/save`, {
         "name": currentManga,
         "chapterNumber": chapterNumber,
         "chapter": chapter,
-        "page": currentPage
+        "page": currentPage,
+        "scrollOffset": currentScrollOffset
       })
 
       pagePreviousRef.current = currentPage;
     }
+  }
+
+  function updateDefaultValues(scrollDirectionPassed){
+    axiosInstance.post('/saveDefaultValues', {
+      "scrollPreference": scrollDirectionPassed
+    })
   }
 
   async function signup(){
@@ -259,11 +257,16 @@ function App() {
             setCurrentPage(response.data.state.currentPage)
             pagePreviousRef.current = response.data.state.currentPage
           }
+          if(response.data.state.currentScrollOffset){
+            setCurrentOffset(response.data.state.currentScrollOffset)
+            scrollPreviousRef.current = response.data.state.currentScrollOffset
+          }
           setCurrentUser(response.data.username)
           setVisibleLogin(false)
           setVisibleLogout(true)
           setAvailableMangas(response.data.availableMangas)
           setDone(true)
+          setScrollDirection(response.data.scrollPreference)
       })
       .catch( error => {
 
@@ -395,6 +398,7 @@ function App() {
       }else{
         console.log(response.data.links)
         setChapter({...chapter, [mangaName]: response.data.links})
+        setCurrentPage({...currentPage, [mangaName]: 0})
         setCurrentChapterNumber({...chapterNumber, [mangaName]: response.data.chapter})
         setlastPage(false)
       }
@@ -410,7 +414,6 @@ function App() {
 
     setOpenReadManga(false)
     setVisible(false)
-    setCurrentPage({...currentPage, [currentManga]: imageGallery.getCurrentIndex()})
     document.documentElement.style.overflow = 'scroll';
     document.body.scroll = "yes";
   }
@@ -457,6 +460,12 @@ function App() {
     }
   }
 
+  function updatePageOrOffset(page, offset){
+    console.log("updatePageOrOffset", page, offset)
+    setCurrentPage({...currentPage, [currentManga]: page})
+    setCurrentOffset({...currentOffset, [currentManga]: offset})
+  }
+
   function handleClicks () {
     if (clickTimeout !== null && clickTimeout2 !== null) {
       console.log('triple click executes')
@@ -471,10 +480,10 @@ function App() {
     } else if (clickTimeout !== null) {
       clickTimeout2 = setTimeout(()=>{
         if(!fullScreen){
-          imageGallery.fullScreen()
+          //TODO: implement fullscreen
           setFullScreen(true)
         }else{
-          imageGallery.exitFullScreen()
+          //TODO: implement fullscreen
           setFullScreen(false)
         }
         clearTimeout(clickTimeout2)
@@ -510,8 +519,10 @@ function App() {
   const handleScrollDirectionChange = () => {
     if(scrollDirection === "horizontal"){
       setScrollDirection("vertical")
+      updateDefaultValues("vertical")
     }else{
       setScrollDirection("horizontal")
+      updateDefaultValues("horizontal")
     }
   }
 
@@ -519,12 +530,18 @@ function App() {
     <>
     <div style={{display: "flex", flexDirection: "column"}}>
       <div style={{display: "flex", flexDirection: "row", width:"100%", justifyContent:"center", backgroundColor:"cornflowerblue", position:"fixed", borderBottomLeftRadius:"5px", borderBottomRightRadius:"5px"}}>
+          <button class="button-31" style={{...authButtonStyles, width:"38px", left: "0", position:"absolute", backgroundColor:"#4c88f3"}} onClick={handleScrollDirectionChange}>
+            {scrollDirection === "horizontal" && <FontAwesomeIcon icon={faArrowsLeftRight} style={{left: "50%", position: "absolute", transform: "translate(-50%, -50%)"}}/>}
+            {scrollDirection === "vertical" && <FontAwesomeIcon icon={faArrowsUpDown} style={{left: "50%", position: "absolute", transform: "translate(-50%, -50%)"}}/>}
+          </button>
         <span style={{ fontSize: "30px", color: "white" }}>{currentUser}</span>
         {visibleLogout &&
           <button class="button-31" style={{...authButtonStyles, width:"38px", right: "0", position:"absolute", backgroundColor:"#4c88f3"}} onClick={() => logout()}>
             <FontAwesomeIcon icon={faRightFromBracket} style={{left: "50%", position: "absolute", transform: "translate(-50%, -50%)"}}/>
+
           </button>
         }
+        
       </div>
       <div class="posters">
         {mangas.map(manga => 
@@ -587,7 +604,7 @@ function App() {
       
       {//<ImageGallery flickThreshold={fillScreen? 100: 0.4} zoomed={fillScreen} swipeThreshold={100} additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
       }
-      <CustomImageGallery onClick={() => handleClicks()} fillScreen={fillScreen} images={chapter[currentManga]} scrollDirection={scrollDirection}></CustomImageGallery>
+      <CustomImageGallery startingIndex={currentPage[currentManga]} startingOffset={currentOffset[currentManga]} updatePageOrOffset={updatePageOrOffset} onClick={() => handleClicks()} fillScreen={fillScreen} images={chapter[currentManga]} scrollDirection={scrollDirection}></CustomImageGallery>
 
       <div class = "chaptersWrapper">
       <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
