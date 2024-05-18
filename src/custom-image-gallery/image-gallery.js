@@ -10,6 +10,7 @@ const ImageGallery = ({ images, scrollDirection, fillScreen, onClick, updatePage
     const [showLoading, setShowLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [scrollPosition, setScrollPosition] = useState(0);
+    const [zoomed, setZoomed] = useState(false);
     const imageRefs = useRef([]);
     const wrapperRef = useRef(null);
     const timeoutRef = useRef(null);
@@ -56,7 +57,11 @@ const ImageGallery = ({ images, scrollDirection, fillScreen, onClick, updatePage
             const imageHtmlElement = imageRefs.current[index];
 
             const ratio = imageHtmlElement.naturalWidth / imageHtmlElement.naturalHeight;
-            const newWidth = (window.innerHeight - 80) * ratio;
+            let newWidth = (window.innerHeight) * ratio;
+
+            if(window.innerWidth > 828){
+                newWidth = (window.innerHeight - 80) * ratio;
+            }
 
             if (isNumber(newWidth) && newWidth > 0) {
                 setCurrentImageWidth(newWidth);
@@ -69,7 +74,11 @@ const ImageGallery = ({ images, scrollDirection, fillScreen, onClick, updatePage
             setShowLoading(false);
 
             const ratio = imageRefs.current[index].naturalWidth / imageRefs.current[index].naturalHeight;
-            const newWidth = (window.innerHeight - 80) * ratio;
+            let newWidth = (window.innerHeight) * ratio;
+
+            if(window.innerWidth > 828){
+                newWidth = (window.innerHeight - 80) * ratio;
+            }
             
             if (isNumber(newWidth) && newWidth > 0) {
                 setCurrentImageWidth(newWidth);
@@ -97,14 +106,22 @@ const ImageGallery = ({ images, scrollDirection, fillScreen, onClick, updatePage
         }, 10000);
     };
 
+    useEffect(() => {
+        console.log("zoomed", zoomed);
+    }, [zoomed]);
+
+    const onDoubleClick = () => {
+        setZoomed(!zoomed);
+    }
+
     return (
         <div ref={wrapperRef} className={`image-gallery ${scrollDirection}`} style={{width: currentImageWidth}} >
         {showLoading && <div>Loading...</div>}
         {scrollDirection === 'horizontal' ? (
-            <BindKeyboardSwipeableViews index={currentIndex} hysteresis={fillScreen ? 1.1 : 0.6} containerStyle={{height: "100%"}} style={{height: "100%"}} slideStyle={{display: 'flex'}} axis='x-reverse' enableMouseEvents={true} onChangeIndex={handleChangeIndex}>
+            <BindKeyboardSwipeableViews index={currentIndex} hysteresis={fillScreen ? 1.1 : 0.6} containerStyle={{height: "100%"}} style={{height: "100%"}} slideStyle={zoomed? {width:"auto", display: "flex"} : {display: 'flex'}} axis='x-reverse' enableMouseEvents={true} onChangeIndex={handleChangeIndex}>
             {images.map((image, index) => (
                 <div key={index} style={{ textAlign: 'center', width: 'fit-content', margin: 'auto'}}>
-                    <img onClick={onClick} ref={el => imageRefs.current[index] = el} key={index} src={image.original} alt={""} onLoad={() => onload(index)}/>
+                    <img style={zoomed? {height: "100vh"}: {maxHeight:"100vh"}} onDoubleClick={onDoubleClick} ref={el => imageRefs.current[index] = el} key={index} src={image.original} alt={""} onLoad={() => onload(index)}/>
                 </div>
             ))}
             </BindKeyboardSwipeableViews>

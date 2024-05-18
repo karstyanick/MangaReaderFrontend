@@ -13,7 +13,7 @@ import CustomImageGallery from './custom-image-gallery/image-gallery';
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://reallfluffy.site"
+let BACKENDHOST = "https://reallyfluffy.dev/api"
 //let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
