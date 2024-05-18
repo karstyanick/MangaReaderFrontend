@@ -34,7 +34,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build-beta": "react-scripts build && cp -r build betabuild",
+    "build-prod": "react-scripts build && cp -r build prodbuild"
   },
   "eslintConfig": {
     "extends": [
