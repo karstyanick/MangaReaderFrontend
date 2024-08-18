@@ -1,4 +1,6 @@
 import {
+  faArrowLeft,
+  faArrowRight,
   faArrowsLeftRight,
   faArrowsUpDown,
   faRightFromBracket,
@@ -482,16 +484,31 @@ function App() {
     }
   }
 
-  function checkLastOrFirstPage(index) {
-    if (index === chapter[currentManga].length - 1) {
-      setlastPage(true);
-      setFirstPage(false);
-    } else if (index === 0) {
-      setFirstPage(true);
-      setlastPage(false);
-    } else {
-      setlastPage(false);
-      setFirstPage(false);
+  function checkFirstOrLastPage(index, offset, fullHeight) {
+    if (index) {
+      if (index === chapter[currentManga].length - 1) {
+        setlastPage(true);
+        setFirstPage(false);
+      } else if (index === 0) {
+        setFirstPage(true);
+        setlastPage(false);
+      } else {
+        setlastPage(false);
+        setFirstPage(false);
+      }
+    }
+
+    if (offset) {
+      if (offset === fullHeight) {
+        setlastPage(true);
+        setFirstPage(false);
+      } else if (offset === 0) {
+        setFirstPage(true);
+        setlastPage(false);
+      } else {
+        setlastPage(false);
+        setFirstPage(false);
+      }
     }
   }
 
@@ -766,7 +783,15 @@ function App() {
                 )
               }
             >
-              &gt;
+              <FontAwesomeIcon
+                icon={faArrowRight}
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  position: "absolute",
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
             </button>
           </>
         )}
@@ -782,6 +807,7 @@ function App() {
           fillScreen={fillScreen}
           images={chapter[currentManga]}
           scrollDirection={scrollDirection}
+          checkFirstOrLastPage={checkFirstOrLastPage}
         ></CustomImageGallery>
 
         <div class="chaptersWrapper">
@@ -844,7 +870,15 @@ function App() {
                 )
               }
             >
-              &lt;
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  position: "absolute",
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
             </button>
           </>
         )}

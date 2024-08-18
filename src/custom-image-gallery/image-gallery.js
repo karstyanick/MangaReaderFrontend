@@ -13,6 +13,7 @@ const ImageGallery = ({
   updatePageOrOffset,
   startingIndex,
   startingOffset,
+  checkFirstOrLastPage,
 }) => {
   const [currentImageWidth, setCurrentImageWidth] = useState(0);
   const [showLoading, setShowLoading] = useState(true);
@@ -21,19 +22,29 @@ const ImageGallery = ({
   const [zoomed, setZoomed] = useState(false);
   const imageRefs = useRef([]);
   const wrapperRef = useRef(null);
-  const timeoutRef = useRef(null);
+  const saveTimeoutRef = useRef(null);
+  const checkFirstLastTimeoutRef = useRef(null);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
 
     if (wrapper && scrollDirection === "horizontal") {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
       }
 
-      clearTimeout(timeoutRef.current);
+      clearTimeout(saveTimeoutRef.current);
       wrapper.removeEventListener("scroll", handleScroll);
+
+      if (checkFirstLastTimeoutRef.current) {
+        clearTimeout(checkFirstLastTimeoutRef.current);
+        checkFirstLastTimeoutRef.current = null;
+      }
+
+      clearTimeout(checkFirstLastTimeoutRef.current);
+      wrapper.removeEventListener("scroll", handleScroll);
+
       return;
     }
 
@@ -59,6 +70,7 @@ const ImageGallery = ({
     setCurrentIndex(index);
 
     updatePageOrOffset(index, scrollPosition);
+    checkFirstOrLastPage(index);
 
     if (imageRefs.current[index]) {
       const imageHtmlElement = imageRefs.current[index];
@@ -102,17 +114,32 @@ const ImageGallery = ({
   };
 
   const handleScroll = () => {
-    if (scrollDirection === "horizontal" || timeoutRef.current) {
+    if (scrollDirection === "horizontal") {
       return;
     }
 
-    timeoutRef.current = setTimeout(() => {
-      const scrollTop = wrapperRef.current.scrollTop;
-      setScrollPosition(scrollTop);
-      updatePageOrOffset(currentIndex, scrollTop);
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }, 10000);
+    if (!saveTimeoutRef.current) {
+      saveTimeoutRef.current = setTimeout(() => {
+        const scrollTop = Math.ceil(wrapperRef.current.scrollTop);
+        setScrollPosition(scrollTop);
+        updatePageOrOffset(currentIndex, scrollTop);
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }, 5000);
+    }
+
+    if (!checkFirstLastTimeoutRef.current) {
+      checkFirstLastTimeoutRef.current = setTimeout(() => {
+        const scrollTop = Math.ceil(wrapperRef.current.scrollTop);
+        checkFirstOrLastPage(
+          undefined,
+          scrollTop,
+          wrapperRef.current.scrollHeight - wrapperRef.current.offsetHeight
+        );
+        clearTimeout(checkFirstLastTimeoutRef.current);
+        checkFirstLastTimeoutRef.current = null;
+      }, 200);
+    }
   };
 
   useEffect(() => {
