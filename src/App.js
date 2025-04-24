@@ -3,13 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import Autocomplete from "react-autocomplete";
-import { useLongPress } from 'use-long-press';
-import "../node_modules/react-image-gallery/styles/css/image-gallery.css";
-import { AddMangaModal, ReadMangaModal, SignupModal } from "./Modal";
-import plusmanga from "./plusmanga.png";
-import ImageGallery from "./image-gallery/ImageGallery"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useLongPress } from 'use-long-press';
+import "../node_modules/react-image-gallery/styles/css/image-gallery.css";
+import ImageGallery from "./image-gallery/ImageGallery";
+import { AddMangaModal, ReadMangaModal, SignupModal } from "./Modal";
+import plusmanga from "./plusmanga.png";
 
 axios.defaults.withCredentials = true
 
@@ -17,9 +17,9 @@ let BACKENDHOST = "https://reallyfluffy.dev/api"
 //let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
-  height:"225px",
-  width:"150px",
-  margin:"10px",
+  height: "225px",
+  width: "150px",
+  margin: "10px",
   "borderRadius": "10px",
   cursor: "pointer"
 };
@@ -32,7 +32,7 @@ const authButtonStyles = {
 }
 
 const navChaptersRight = {
-  height:"40px",
+  height: "40px",
   width: "40px",
   display: "flex",
   "justifyContent": "center",
@@ -44,7 +44,7 @@ const navChaptersRight = {
 }
 
 const navChaptersLeft = {
-  height:"40px",
+  height: "40px",
   width: "40px",
   display: "flex",
   "justifyContent": "center",
@@ -117,34 +117,24 @@ function App() {
     slideToChapter(visible, isOpenReadManga)
   }, [currentPage, chapter, currentManga, isOpenReadManga, imageGallery, visible])
 
-  function slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga){
-    if(isOpenReadManga !== isOpenReadMangaPreviousRef.current){
-      if(imageGallery){
+  function slideToPage(isOpenReadManga, imageGallery, currentPage, currentManga) {
+    if (isOpenReadManga !== isOpenReadMangaPreviousRef.current) {
+      if (imageGallery) {
         imageGallery.slideToIndex(currentPage[currentManga])
       }
       isOpenReadMangaPreviousRef.current = isOpenReadManga;
     }
   }
 
-  function slideToChapter(visible, isOpenReadManga){
-    if(visible){
+  function slideToChapter(visible, isOpenReadManga) {
+    if (visible) {
       scrollRef.current.scrollIntoView()
       return
     }
-    if(isOpenReadManga && window.innerWidth > "828"){
+    if (isOpenReadManga && window.innerWidth > "828") {
       scrollRef.current.scrollIntoView()
       return
     }
-  }
-
-  async function getQueryFromSearch(term){
-    let queryTerm;
-    for (const manga of availableMangas) {
-      if(manga.label === term){
-        queryTerm = manga.id
-      }
-    }
-    return queryTerm
   }
 
   const axiosInstance = axios.create({
@@ -160,11 +150,11 @@ function App() {
     },
     (error) => {
       return Promise.reject(error);
-  });
+    });
 
   function saveState(currentPage, chapter, currentManga) {
 
-    if(JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)){
+    if (JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current)) {
       axiosInstance.post(`/save`, {
         "name": currentManga,
         "chapterNumber": chapterNumber,
@@ -176,98 +166,67 @@ function App() {
     }
   }
 
-  async function signup(){
+  async function signup() {
     const username = usernameRef.current.value
     const password = passwordRef.current.value
 
-    if(!username){
-      toast("Please enter a username", {type: "error"});
+    if (!username) {
+      toast("Please enter a username", { type: "error" });
     }
 
-    if(!password){
-      toast("Please enter a password", {type: "error"});
+    if (!password) {
+      toast("Please enter a password", { type: "error" });
     }
 
 
     return axiosInstance.post(`/signup`, {
-        "username": username,
-        "password": password
+      "username": username,
+      "password": password
     }).then(async response => {
-        firstPageLoadRef.current = true
-        //encryptAndSaveToken(response.data.token)
-        saveToken(response.data.token)
-        initPage()
-        setCurrentUser(response.data.username)
-        setOpenSignup(false)
+      firstPageLoadRef.current = true
+      //encryptAndSaveToken(response.data.token)
+      saveToken(response.data.token)
+      initPage()
+      setCurrentUser(response.data.username)
+      setOpenSignup(false)
     })
   }
 
-  function saveToken(token){
+  function saveToken(token) {
     localStorage.setItem("jwt", token);
   }
 
-/*   async function encryptAndSaveToken(token){
-    const key = await window.crypto.subtle.generateKey(
-      {
-        name: "AES-GCM",
-        length: 256,
-      },
-      true,
-      ["encrypt", "decrypt"]
-    );
-
-    const encodedToken = new TextEncoder().encode(token);
-    const encryptedToken = await window.crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv: new Uint8Array(12),
-      },
-      key,
-      encodedToken
-    );
-    saveKeyForUser(key)
-    sessionStorage.setItem("encryptedToken", new Uint8Array(encryptedToken));
-  }
-
-  async function saveKeyForUser(key){
-    setDecryptionKey(key)
-
-    axiosInstance.post(`/saveDecryptionKey`,{
-      decryptionKey: key
-    })
-  } */
-
-  async function signin(){
+  async function signin() {
     const username = usernameRef.current.value
     const password = passwordRef.current.value
 
-    if(!username){
-      toast("Please enter a username", {type: "error"});
+    if (!username) {
+      toast("Please enter a username", { type: "error" });
     }
 
-    if(!password){
-      toast("Please enter a password", {type: "error"});
+    if (!password) {
+      toast("Please enter a password", { type: "error" });
     }
 
     return axiosInstance.post(`/login`, {
-        "username": username,
-        "password": password
+      "username": username,
+      "password": password
     }).then(async response => {
-        if(response.data === "Wrong password"){
-          toast("Username or passowrd incorrect", {type: "error"});
-          return
-        }
-        //encryptAndSaveToken(response.data.token)
-        saveToken(response.data.token)
-        firstPageLoadRef.current = true
-        initPage()
-        setCurrentUser(response.data.username)
-        setOpenSignup(false)
+      if (response.data === "Wrong password") {
+        toast("Username or passowrd incorrect", { type: "error" });
+        return
+      }
+      //encryptAndSaveToken(response.data.token)
+      saveToken(response.data.token)
+      firstPageLoadRef.current = true
+      initPage()
+      setCurrentUser(response.data.username)
+      setOpenSignup(false)
     })
   }
 
-  async function logout(){
-    return axiosInstance.post(`/logout`,{
+  async function logout() {
+    return axiosInstance.post(`/logout`, {
     }).then(response => {
       localStorage.removeItem("jwt")
       firstPageLoadRef.current = true
@@ -276,20 +235,20 @@ function App() {
     })
   }
 
-  async function initPage(key){
-    if(firstPageLoadRef.current === true){
+  async function initPage(key) {
+    if (firstPageLoadRef.current === true) {
       firstPageLoadRef.current = false
       return axiosInstance.get(`/`, {
       })
-      .then(response => {
+        .then(response => {
           //setManga([])
           //addManga([{id: "addManga", name:"addManga", poster: plusmanga}])
-          addManga([...response.data.posters, {id: "addManga", name:"addManga", poster: plusmanga}])
-          if(response.data.state.currentChapter){
+          addManga([...response.data.posters, { id: "addManga", name: "addManga", poster: plusmanga }])
+          if (response.data.state.currentChapter) {
             setChapter(response.data.state.currentChapter)
             setCurrentChapterNumber(response.data.state.currentChapterNumber)
           }
-          if(response.data.state.currentPage){
+          if (response.data.state.currentPage) {
             setCurrentPage(response.data.state.currentPage)
             pagePreviousRef.current = response.data.state.currentPage
           }
@@ -298,8 +257,8 @@ function App() {
           setVisibleLogout(true)
           setAvailableMangas(response.data.availableMangas)
           setDone(true)
-      })
-      .catch( error => {
+        })
+        .catch(error => {
           setChapter({})
           setCurrentChapterNumber({})
           addManga([])
@@ -310,30 +269,31 @@ function App() {
           toggleShowIndex(false)
           setVisibleLogin(true)
           setVisibleLogout(false)
-      })
+        })
     }
   }
 
-  async function addNewManga(){
-    const mangaName = await getQueryFromSearch(searchTerm)
+  async function addNewManga() {
+    const { id, label } = availableMangas.find(manga => manga.label === searchTerm);
+
     setLoading(true)
-    if(!mangaName){      
-      toast("Make sure the name is in the list", {type: "error"});
+    if (!id) {
+      toast("Make sure the name is in the list", { type: "error" });
       setLoading(false)
       return
     }
     const addMangaChapters = addMangaChaptersRef.current.value.toLowerCase()
 
-    if(!addMangaChapters.includes("-") && addMangaChapters !== "latest" && addMangaChapters !== "first"){
-      toast("Incorrect input format", {type: "error"})
+    if (!addMangaChapters.includes("-") && addMangaChapters !== "latest" && addMangaChapters !== "first") {
+      toast("Incorrect input format", { type: "error" })
       console.log("Incorrect input format")
       setLoading(false)
       return
     }
 
-    if (mangaName === ""){
-      toast("Make sure the name is in the list", {type: "error"});
-      console.log("empty manga name in add manga"); 
+    if (id === "") {
+      toast("Make sure the name is in the list", { type: "error" });
+      console.log("empty manga name in add manga");
       setLoading(false)
       return
     }
@@ -341,28 +301,29 @@ function App() {
     setCurrentlyFetching(true)
 
     return axiosInstance.post(`/addManga`, {
-      "name": mangaName,
+      "id": id,
+      "label": label,
       "chapters": addMangaChapters
     }).then(response => {
 
-        if(response.data?.chapters?.lenght === 0){
-          toast("Something went wrong", {type: "error"})
-        }
+      if (response.data?.chapters?.lenght === 0) {
+        toast("Something went wrong", { type: "error" })
+      }
 
-        setCurrentlyFetching(false)
+      setCurrentlyFetching(false)
 
-        toast("Manga added", {type: "success"})
+      toast("Manga added", { type: "success" })
 
-        setLoading(false)
-        firstPageLoadRef.current = true
-        initPage()
-        setOpenAddManga(false)
+      setLoading(false)
+      firstPageLoadRef.current = true
+      initPage()
+      setOpenAddManga(false)
     })
   }
 
-  async function addChapters(){
+  async function addChapters() {
     const mangaName = currentManga
-    const newChapters = `${manga.at(-1)}-${parseInt(manga.at(-1))+10}`
+    const newChapters = `${manga.at(-1)}-${parseInt(manga.at(-1)) + 10}`
     setLoading(true)
 
     setCurrentlyFetching(true)
@@ -371,13 +332,13 @@ function App() {
       "name": mangaName,
       "chapters": newChapters
     }).then(response => {
-      
+
       setCurrentlyFetching(false)
 
-      if(manga.length === response.data.chapters.length){
-        toast("No new chapters released", {type: "info"})
-      }else{
-        toast("Chapters added", {type: "success"})
+      if (manga.length === response.data.chapters.length) {
+        toast("No new chapters released", { type: "info" })
+      } else {
+        toast("Chapters added", { type: "success" })
       }
 
       setLoading(false)
@@ -385,10 +346,10 @@ function App() {
     })
   }
 
-  async function getManga(mangaName){
-    if (mangaName === ""){console.log("empty manga name in get manga"); return}
+  async function getManga(mangaName) {
+    if (mangaName === "") { console.log("empty manga name in get manga"); return }
     return axiosInstance.get(`/getManga`, {
-      params:{
+      params: {
         "name": mangaName,
       }
     }).then(response => {
@@ -396,70 +357,70 @@ function App() {
     })
   }
 
-  async function deleteManga(mangaName){
+  async function deleteManga(mangaName) {
     return axiosInstance.post(`/deleteManga`, {
       "name": mangaName,
     }).then(response => {
-        firstPageLoadRef.current = true
-        initPage()
+      firstPageLoadRef.current = true
+      initPage()
     })
   }
 
-  async function getChapter(mangaName, chapterToGet){
-    if(currentlyFetching){
-      toast("Please wait until new chapters are retrieved", {type: "info"})
+  async function getChapter(mangaName, chapterToGet) {
+    if (currentlyFetching) {
+      toast("Please wait until new chapters are retrieved", { type: "info" })
       return
     }
 
-    if (chapterToGet === "")return
+    if (chapterToGet === "") return
     return axiosInstance.get(`/getChapter`, {
-      params:{
+      params: {
         "name": mangaName,
         "chapter": chapterToGet
       }
     }).then(response => {
 
-      if(!response?.data?.links){
-        toast("Please retrieve further chapters", {type: "error"});
-      }else{
+      if (!response?.data?.links) {
+        toast("Please retrieve further chapters", { type: "error" });
+      } else {
         console.log(response.data.links)
-        setChapter({...chapter, [mangaName]: response.data.links})
-        setCurrentChapterNumber({...chapterNumber, [mangaName]: response.data.chapter})
+        setChapter({ ...chapter, [mangaName]: response.data.links })
+        setCurrentChapterNumber({ ...chapterNumber, [mangaName]: response.data.chapter })
         setlastPage(false)
       }
     })
   }
 
-  async function onCloseModal(){
+  async function onCloseModal() {
 
-    if(currentlyFetching){
-      toast("Please wait until new chapters are retrieved", {type: "info"})
+    if (currentlyFetching) {
+      toast("Please wait until new chapters are retrieved", { type: "info" })
       return
     }
 
     setOpenReadManga(false)
     setVisible(false)
-    setCurrentPage({...currentPage, [currentManga]: imageGallery.getCurrentIndex()})
+    setCurrentPage({ ...currentPage, [currentManga]: imageGallery.getCurrentIndex() })
     document.documentElement.style.overflow = 'scroll';
     document.body.scroll = "yes";
   }
 
-  async function openReadManga(name){
+  async function openReadManga(name) {
 
-    if(currentlyFetching){
-      toast("Please wait until new manga is added", {type: "info"})
+    if (currentlyFetching) {
+      toast("Please wait until new manga is added", { type: "info" })
       return
     }
 
     console.log("called")
-    if(name === "addManga"){
+    if (name === "addManga") {
       setOpenAddManga(true)
-    }else{
+    } else {
       setCurrentManga(name)
-      if(!chapter[name]){
-        await setChapter({...chapter, [name]: []})
+      if (!chapter[name]) {
+        await setChapter({ ...chapter, [name]: [] })
       }
-      
+
       await navigator.wakeLock.request();
 
       const manga = await getManga(name)
@@ -471,22 +432,22 @@ function App() {
     }
   }
 
-  function checkLastOrFirstPage(index){
-    if(index===chapter[currentManga].length-1){
+  function checkLastOrFirstPage(index) {
+    if (index === chapter[currentManga].length - 1) {
       setlastPage(true)
       setFirstPage(false)
     }
-    else if(index===0){
+    else if (index === 0) {
       setFirstPage(true)
       setlastPage(false)
     }
-    else{
+    else {
       setlastPage(false)
       setFirstPage(false)
     }
   }
 
-  function handleClicks () {
+  function handleClicks() {
     if (clickTimeout !== null && clickTimeout2 !== null) {
       console.log('triple click executes')
 
@@ -498,11 +459,11 @@ function App() {
       clickTimeout = null
       navigator.wakeLock.request();
     } else if (clickTimeout !== null) {
-      clickTimeout2 = setTimeout(()=>{
-        if(!fullScreen){
+      clickTimeout2 = setTimeout(() => {
+        if (!fullScreen) {
           imageGallery.fullScreen()
           setFullScreen(true)
-        }else{
+        } else {
           imageGallery.exitFullScreen()
           setFullScreen(false)
         }
@@ -513,11 +474,11 @@ function App() {
     }
     else {
       console.log('single click')
-      clickTimeout = setTimeout(()=>{
-      console.log('first click executes ')
-      navigator.wakeLock.request();
-      toggleShowIndex(!showIndex)
-      clearTimeout(clickTimeout)
+      clickTimeout = setTimeout(() => {
+        console.log('first click executes ')
+        navigator.wakeLock.request();
+        toggleShowIndex(!showIndex)
+        clearTimeout(clickTimeout)
         clickTimeout = null
       }, 500)
     }
@@ -532,133 +493,133 @@ function App() {
     onFinish: () => console.log("Long press finished"),
     onCancel: () => console.log("Press cancelled"),
     onMove: () => console.log("Detected mouse or touch movement"),
-    threshold: 550, 
+    threshold: 550,
     cancelOnMovement: true
   });
 
   return (
     <>
-    <div style={{display: "flex", flexDirection: "column"}}>
-      <div style={{display: "flex", flexDirection: "row", width:"100%", justifyContent:"center", backgroundColor:"cornflowerblue", position:"fixed", borderBottomLeftRadius:"5px", borderBottomRightRadius:"5px"}}>
-        <span style={{ fontSize: "30px", color: "white" }}>{currentUser}</span>
-        {visibleLogout &&
-          <button class="button-31" style={{...authButtonStyles, width:"38px", right: "0", position:"absolute", backgroundColor:"#4c88f3"}} onClick={() => logout()}>
-            <FontAwesomeIcon icon={faRightFromBracket} style={{left: "50%", position: "absolute", transform: "translate(-50%, -50%)"}}/>
-          </button>
-        }
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center", backgroundColor: "cornflowerblue", position: "fixed", borderBottomLeftRadius: "5px", borderBottomRightRadius: "5px" }}>
+          <span style={{ fontSize: "30px", color: "white" }}>{currentUser}</span>
+          {visibleLogout &&
+            <button class="button-31" style={{ ...authButtonStyles, width: "38px", right: "0", position: "absolute", backgroundColor: "#4c88f3" }} onClick={() => logout()}>
+              <FontAwesomeIcon icon={faRightFromBracket} style={{ left: "50%", position: "absolute", transform: "translate(-50%, -50%)" }} />
+            </button>
+          }
+        </div>
+        <div class="posters">
+          {mangas.map(manga =>
+            <div style={{ display: "flex" }}>
+              <img style={imgStyles} onClick={() => openReadManga(manga.name)} {...bind()} alt={""} key={manga.id} name={manga.name} src={manga.poster} />
+              {(longpressed && manga !== mangas[mangas.length - 1]) &&
+                <button style={{ height: "30px", width: "45px", "margin-top": "10px", "margin-left": "-45px", backgroundColor: "transparent", border: "none" }} onClick={() => deleteManga(manga.name)}>
+                  <FontAwesomeIcon icon={faTrash} size="xl" />
+                </button>
+              }
+            </div>
+          )}
+        </div>
       </div>
-      <div class="posters">
-        {mangas.map(manga => 
-          <div style={{display:"flex"}}>
-            <img style = {imgStyles} onClick={() => openReadManga(manga.name)} {...bind()} alt={""} key={manga.id} name={manga.name} src={manga.poster}/>
-            {(longpressed && manga !== mangas[mangas.length-1]) &&
-              <button style={{height:"30px", width:"45px", "margin-top":"10px", "margin-left": "-45px", backgroundColor:"transparent", border: "none"}} onClick={() => deleteManga(manga.name)}>
-                <FontAwesomeIcon icon={faTrash} size="xl" />
-              </button>
+
+      {visibleLogin &&
+        <button class="button-31" style={{ ...authButtonStyles, top: "50%", transform: "translate(-50%,-50%)", position: "absolute", left: "50%" }} onClick={() => setOpenSignup(true)}>Sign in</button>
+      }
+
+      <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)} loading={loading}>
+        {done && <Autocomplete
+          items={availableMangas}
+          shouldItemRender={(item, value) => item.label.toLowerCase().indexOf(value.toLowerCase()) > -1 && value.length > 2}
+          getItemValue={item => item.label}
+          renderItem={(item, highlighted) =>
+            <div
+              key={item.id}
+              style={{ backgroundColor: highlighted ? '#6495ed' : 'transparent' }}
+            >
+              {item.label}
+            </div>
+          }
+          renderInput={function(props) {
+            return <input placeholder="MangaName" {...props} />
+          }}
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          onSelect={(value, item) => { setSearchTerm(value); setQueryTerm(item.id) }}
+          menuStyle={dropDownStyle}
+          sortItems={(a, b, value) => { return a.label.length - b.label.length }}
+          renderMenu={
+            function(items, value, style) {
+              return <div style={{ ...style, ...this.menuStyle }} children={items} />
+            }
+          }
+        />}
+        <input ref={addMangaChaptersRef} placeholder={"Chapters (a-b, Latest, First)"}></input>
+      </AddMangaModal>
+
+      <SignupModal signup={signup} signin={signin} open={isOpenSignup} onClose={() => setOpenSignup(false)}>
+        <input ref={usernameRef} placeholder={"Username"}></input>
+        <input ref={passwordRef} type='password' placeholder={"Password"}></input>
+      </SignupModal>
+
+      <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={() => { setVisible(!visible) }} zoomed={fillScreen}>
+        {firstPage && <>
+          <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga]) - 1)}>&gt;</button>
+        </>
+        }
+
+        <ImageGallery flickThreshold={fillScreen ? 100 : 0.4} zoomed={fillScreen} swipeThreshold={100} additionalClass={fillScreen ? "fillScreen" : ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={() => handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
+
+        <div class="chaptersWrapper">
+          <span style={{ color: "white", "margin-right": "50px" }}>{currentManga}</span>
+          <div class="chapters">
+            {manga.map(chapter => {
+              const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
+              const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
+              return <button ref={ref} style={{ backgroundColor: color, cursor: "pointer" }} class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>
+            })}
+            {loading && <>
+              <div class="loadingBox">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+              </div>
+            </>
+            }
+            {!loading && <>
+              <button class="button-31" style={{ cursor: "pointer" }} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>
+            </>
             }
           </div>
-        )}
-      </div>
-    </div>
-
-    {visibleLogin && 
-          <button class="button-31" style={{...authButtonStyles, top: "50%", transform: "translate(-50%,-50%)", position:"absolute", left:"50%"}} onClick={() => setOpenSignup(true)}>Sign in</button>
-    }
-
-    <AddMangaModal addManga={addNewManga} open={isOpenAddManga} onClose={() => setOpenAddManga(false)} loading={loading}>
-    {done && <Autocomplete
-        items={availableMangas}
-        shouldItemRender={(item, value) => item.label.toLowerCase().indexOf(value.toLowerCase()) > -1 && value.length > 2}
-        getItemValue={item => item.label}
-        renderItem={(item, highlighted) =>
-          <div
-            key={item.id}
-            style={{ backgroundColor: highlighted ? '#6495ed' : 'transparent'}}
-          >
-            {item.label}
-          </div>
-        }
-        renderInput={function(props) {
-          return <input placeholder="MangaName" {...props} />
-        }}
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        onSelect={(value, item) => {setSearchTerm(value); setQueryTerm(item.id)}}
-        menuStyle={dropDownStyle}
-        sortItems={(a, b, value) => {return a.label.length - b.label.length}}
-        renderMenu={
-          function(items, value, style) {
-            return <div style={{ ...style, ...this.menuStyle }} children={items}/>
-          }
-        }
-        />}
-      <input ref={addMangaChaptersRef} placeholder={"Chapters (a-b, Latest, First)"}></input>
-    </AddMangaModal>
-
-    <SignupModal signup={signup} signin={signin} open={isOpenSignup} onClose={() => setOpenSignup(false)}>
-      <input ref={usernameRef} placeholder={"Username"}></input>
-      <input ref={passwordRef} type='password' placeholder={"Password"}></input>
-    </SignupModal>
-
-    <ReadMangaModal open={isOpenReadManga} onClose={() => onCloseModal()} setVisible={()=> {setVisible(!visible)}} zoomed={fillScreen}>
-      {firstPage &&<>
-        <button class="button-31" style={navChaptersRight} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])-1)}>&gt;</button>
-        </>
-      }
-      
-      <ImageGallery flickThreshold={fillScreen? 100: 0.4} zoomed={fillScreen} swipeThreshold={100} additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
-      
-      <div class = "chaptersWrapper">
-      <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
-      <div class = "chapters">
-      {manga.map(chapter => {
-        const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
-        const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
-        return <button ref={ref} style={{backgroundColor:color, cursor: "pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>
-      })}
-      {loading &&<>
-        <div class= "loadingBox">
-        <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
         </div>
+        {lastPage && <>
+          <button class="button-31" style={navChaptersLeft} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga]) + 1)}>&lt;</button>
         </>
-      }
-      {!loading &&<>
-        <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>
-        </>
-      }
-      </div>
-      </div>
-      {lastPage &&<>
-        <button class="button-31" style={navChaptersLeft} onClick={() => getChapter(currentManga, parseInt(chapterNumber[currentManga])+1)}>&lt;</button>
-        </>
-      }
+        }
 
 
-      {visible && <>
-          <div class = "chaptersWrapperSmallScreen">
-          <span style = {{color:"white", "margin-right": "50px"}}>{currentManga}</span>
-          <div class = "chapters">
-          {manga.map(chapter => {
-            const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
-            const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
-            return <button ref={ref} style={{backgroundColor:color, cursor:"pointer"}}class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>      
-          })}
-          {loading &&<>
-            <div class= "loadingBox">
-            <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+        {visible && <>
+          <div class="chaptersWrapperSmallScreen">
+            <span style={{ color: "white", "margin-right": "50px" }}>{currentManga}</span>
+            <div class="chapters">
+              {manga.map(chapter => {
+                const color = (chapter === chapterNumber[currentManga]) ? "#ffa07a" : ""
+                const ref = (chapter === chapterNumber[currentManga]) ? scrollRef : null
+                return <button ref={ref} style={{ backgroundColor: color, cursor: "pointer" }} class="button-31" key={chapter} onClick={() => getChapter(currentManga, chapter)}>{chapter}</button>
+              })}
+              {loading && <>
+                <div class="loadingBox">
+                  <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+              </>
+              }
+              {!loading && <>
+                <button class="button-31" style={{ cursor: "pointer" }} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>
+              </>
+              }
             </div>
-            </>
-          }
-          {!loading &&<>
-            <button class="button-31" style={{cursor: "pointer"}} key={"addChapters"} onClick={() => addChapters()}>Add Chapters </button>
-            </>
-          }
           </div>
-          </div>
-      </>}
-    </ReadMangaModal>
-    
-    <ToastContainer position="top-right" theme="dark" autoClose={5000}/>
+        </>}
+      </ReadMangaModal>
+
+      <ToastContainer position="top-right" theme="dark" autoClose={5000} />
     </>
   )
 }
