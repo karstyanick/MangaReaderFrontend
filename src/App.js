@@ -322,14 +322,16 @@ function App() {
   }
 
   async function addChapters() {
-    const mangaName = currentManga
+    const { id, label } = availableMangas.find(manga => manga.label === currentManga);
+
     const newChapters = `${manga.at(-1)}-${parseInt(manga.at(-1)) + 10}`
     setLoading(true)
 
     setCurrentlyFetching(true)
 
     return axiosInstance.post(`/addManga`, {
-      "name": mangaName,
+      "id": id,
+      "label": label,
       "chapters": newChapters
     }).then(response => {
 
