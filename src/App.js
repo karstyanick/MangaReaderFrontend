@@ -13,8 +13,8 @@ import plusmanga from "./plusmanga.png";
 
 axios.defaults.withCredentials = true
 
-let BACKENDHOST = "https://reallyfluffy.dev/api"
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://reallyfluffy.dev/api"
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height: "225px",
@@ -243,7 +243,7 @@ function App() {
         .then(response => {
           //setManga([])
           //addManga([{id: "addManga", name:"addManga", poster: plusmanga}])
-          addManga([...response.data.posters, { id: "addManga", name: "addManga", poster: plusmanga }])
+          addManga([...response.data.posters, { id: "addManga", label: "addManga", poster: plusmanga }])
           if (response.data.state.currentChapter) {
             setChapter(response.data.state.currentChapter)
             setCurrentChapterNumber(response.data.state.currentChapterNumber)
@@ -513,9 +513,9 @@ function App() {
         <div class="posters">
           {mangas.map(manga =>
             <div style={{ display: "flex" }}>
-              <img style={imgStyles} onClick={() => openReadManga(manga.name)} {...bind()} alt={""} key={manga.id} name={manga.name} src={manga.poster} />
+              <img style={imgStyles} onClick={() => openReadManga(manga.label)} {...bind()} alt={""} key={manga.id} name={manga.label} src={manga.poster} />
               {(longpressed && manga !== mangas[mangas.length - 1]) &&
-                <button style={{ height: "30px", width: "45px", "margin-top": "10px", "margin-left": "-45px", backgroundColor: "transparent", border: "none" }} onClick={() => deleteManga(manga.name)}>
+                <button style={{ height: "30px", width: "45px", "margin-top": "10px", "margin-left": "-45px", backgroundColor: "transparent", border: "none" }} onClick={() => deleteManga(manga.label)}>
                   <FontAwesomeIcon icon={faTrash} size="xl" />
                 </button>
               }
