@@ -6,7 +6,18 @@ import 'swiper/css';
 import { Keyboard } from "swiper/modules";
 import Swiper from "swiper";
 
-const ImageGallery = ({
+export interface ImageGalleryProps {
+  images: { original: string }[]
+  scrollDirection: "horizontal" | "vertical"
+  fillScreen: boolean
+  onClick: () => void
+  updatePageOrOffset: (index: number, offset: number) => void
+  startingIndex: number
+  startingOffset: number
+  checkFirstOrLastPage: (index: number | undefined, offset: number | undefined, fullHeight: number | undefined) => void
+}
+
+const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
   scrollDirection,
   fillScreen,
@@ -67,7 +78,7 @@ const ImageGallery = ({
     setCurrentIndex(index);
 
     updatePageOrOffset(index, scrollPosition);
-    checkFirstOrLastPage(index);
+    checkFirstOrLastPage(index, undefined, undefined);
   };
 
   const onload = (index: number) => {

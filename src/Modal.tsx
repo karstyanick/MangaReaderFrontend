@@ -1,5 +1,6 @@
 import { faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Sign } from "crypto";
 import React from "react";
 import ReactDOM from "react-dom";
 
@@ -31,7 +32,15 @@ const OVERLAY_STYLES: React.CSSProperties = {
   zIndex: 1000,
 };
 
-export function AddMangaModal({ addManga, open, children, onClose, loading }) {
+export interface AddMangaModalProps {
+  addManga: () => void,
+  open: boolean,
+  children: any,
+  onClose: () => void,
+  loading: boolean
+}
+
+export const AddMangaModal: React.FC<AddMangaModalProps> = ({ addManga, open, children, onClose, loading }) => {
   if (!open) return null;
 
   return ReactDOM.createPortal(
@@ -71,14 +80,23 @@ export function AddMangaModal({ addManga, open, children, onClose, loading }) {
   );
 }
 
-export function ReadMangaModal({
+export interface ReadMangaModalProps {
+  open: boolean,
+  children: any,
+  onClose: () => void,
+  setVisible: () => void,
+  zoomed: boolean,
+  setScrollDirection: () => void
+}
+
+export const ReadMangaModal: React.FC<ReadMangaModalProps> = ({
   children,
   open,
   onClose,
   setVisible,
   zoomed,
   setScrollDirection,
-}) {
+}) => {
   if (!open) return null;
 
   return ReactDOM.createPortal(
@@ -122,7 +140,15 @@ export function ReadMangaModal({
   );
 }
 
-export function SignupModal({ signup, signin, children, open, onClose }) {
+export interface SignupModalProps {
+  signin: () => void,
+  signup: () => void,
+  children: any,
+  onClose: () => void,
+  open: boolean
+}
+
+export const SignupModal: React.FC<SignupModalProps> = ({ signup, signin, children, open, onClose }) => {
   if (!open) return null;
 
   return ReactDOM.createPortal(

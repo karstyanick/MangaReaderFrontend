@@ -133,7 +133,7 @@ function App() {
   const [fillScreen, setFillScreen] = useState(false);
   const [longpressed, setLongPressed] = useState(false);
   const [currentlyFetching, setCurrentlyFetching] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState("horizontal");
+  const [scrollDirection, setScrollDirection] = useState<"horizontal" | "vertical">("horizontal");
 
   useEffect(() => {
     initPage();
@@ -491,7 +491,7 @@ function App() {
     }
   }
 
-  function checkFirstOrLastPage(index: number, offset: number, fullHeight: number) {
+  function checkFirstOrLastPage(index: number | undefined, offset: number | undefined, fullHeight: number | undefined) {
     if (index !== undefined) {
       if (index === chapter[currentManga].length - 1) {
         setlastPage(true);
@@ -771,9 +771,6 @@ function App() {
           </>
         )}
 
-        {
-          //<ImageGallery flickThreshold={fillScreen? 100: 0.4} zoomed={fillScreen} swipeThreshold={100} additionalClass={fillScreen? "fillScreen": ""} lazyLoad={true} ref={i => imageGallery = i} showIndex={showIndex} onClick={()=> handleClicks()} onSlide={index => checkLastOrFirstPage(index)} items={chapter[currentManga]} isRTL={true} showThumbnails={false} showFullscreenButton={false} showPlayButton={false} showNav={false} slideDuration={300}></ImageGallery>
-        }
         <CustomImageGallery
           startingIndex={currentPage[currentManga]}
           startingOffset={currentOffset[currentManga]}
@@ -861,9 +858,6 @@ function App() {
         {visible && (
           <>
             <div className="chaptersWrapperSmallScreen">
-              <span style={{ color: "white", marginRight: "50px" }}>
-                {currentManga}
-              </span>
               <div className="chapters">
                 {mangaChapterList.map((chapter) => {
                   const color =
