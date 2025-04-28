@@ -9,19 +9,18 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
-import Autocomplete from "react-autocomplete";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLongPress } from "use-long-press";
-import "../node_modules/react-image-gallery/styles/css/image-gallery.css";
+import { Autocomplete } from "./Autocomplete";
 import CustomImageGallery from "./custom-image-gallery/image-gallery";
 import { AddMangaModal, ReadMangaModal, SignupModal } from "./Modal";
-import plusmanga from "./plusmanga.png";
+import plusManga from "./plusmanga.png";
 
 axios.defaults.withCredentials = true;
 
-let BACKENDHOST = "https://reallyfluffy.dev/api";
-//let BACKENDHOST = "http://localhost:5000"
+//let BACKENDHOST = "https://reallyfluffy.dev/api";
+let BACKENDHOST = "http://localhost:5000"
 
 const imgStyles = {
   height: "225px",
@@ -31,72 +30,91 @@ const imgStyles = {
   cursor: "pointer",
 };
 
-const authButtonStyles = {
+const authButtonStyles: React.CSSProperties = {
   width: "100px",
-  "min-height": "35px",
+  minHeight: "40px",
   padding: "0",
   cursor: "pointer",
+  borderRadius: "0px"
 };
 
-const navChaptersRight = {
+const navChaptersRight: React.CSSProperties = {
   height: "40px",
   width: "40px",
   display: "flex",
   justifyContent: "center",
+  top: "50%",
   transform: "translate(0, -50%)",
-  "z-index": "1200",
+  zIndex: "1200",
   position: "absolute",
   right: 0,
   cursor: "pointer",
 };
 
-const navChaptersLeft = {
+const navChaptersLeft: React.CSSProperties = {
   height: "40px",
   width: "40px",
   display: "flex",
   justifyContent: "center",
+  top: "50%",
   transform: "translate(0, -50%)",
-  "z-index": "1200",
+  zIndex: "1200",
   position: "absolute",
   left: 0,
   cursor: "pointer",
 };
 
-const dropDownStyle = {
-  //borderRadius: '3px',
-  boxShadow: "0 2px 12px rgba(0, 0, 0, 0.1)",
-  background: "rgba(255, 255, 255, 0.9)",
-  //padding: '2px 0',
-  fontSize: "90%",
-  overflow: "auto",
-  maxHeight: "200px", // TODO: don't cheat, let it flow to the bottom
-  maxWidth: "400px",
+export interface MangaChapters {
+  [mangaName: string]: {
+    original: string;
+  }[];
+};
+
+export interface ChapterNumber {
+  [mangaName: string]: string
+};
+
+export interface CurrentPage {
+  [mangaName: string]: number
+};
+
+export interface CurrentOffset {
+  [mangaName: string]: number
+};
+
+export interface MangaCard {
+  id: string,
+  label: string,
+  poster: string
+};
+
+export interface AvailableManga {
+  id: string,
+  label: string
 };
 
 function App() {
-  let clickTimeout = null;
-  let clickTimeout2 = null;
+  let clickTimeout: NodeJS.Timeout | null = null;
+  let clickTimeout2: NodeJS.Timeout | null = null;
 
-  const addMangaRef = useRef();
-  const addMangaChaptersRef = useRef();
+  const addMangaChaptersRef = useRef<HTMLInputElement | null>(null);
 
-  const usernameRef = useRef();
-  const passwordRef = useRef();
+  const usernameRef = useRef<HTMLInputElement | null>(null);
+  const passwordRef = useRef<HTMLInputElement | null>(null);
 
-  const scrollRef = useRef();
+  const scrollRef = useRef<HTMLButtonElement | null>(null);
 
   const pagePreviousRef = useRef({});
   const scrollPreviousRef = useRef({});
-  const isOpenReadMangaPreviousRef = useRef(false);
   const firstPageLoadRef = useRef(true);
 
-  const [chapter, setChapter] = useState({});
-  const [chapterNumber, setCurrentChapterNumber] = useState({});
-  const [mangas, addManga] = useState([]);
-  const [manga, setManga] = useState([]);
+  const [chapter, setChapter] = useState<MangaChapters>({});
+  const [chapterNumber, setCurrentChapterNumber] = useState<ChapterNumber>({});
+  const [mangas, addManga] = useState<MangaCard[]>([]);
+  const [mangaChapterList, setMangaChapterList] = useState<string[]>([]);
   const [currentManga, setCurrentManga] = useState("");
-  const [currentPage, setCurrentPage] = useState({});
-  const [currentOffset, setCurrentOffset] = useState({});
+  const [currentPage, setCurrentPage] = useState<CurrentPage>({});
+  const [currentOffset, setCurrentOffset] = useState<CurrentOffset>({});
   const [isOpenSignup, setOpenSignup] = useState(false);
   const [isOpenAddManga, setOpenAddManga] = useState(false);
   const [isOpenReadManga, setOpenReadManga] = useState(false);
@@ -108,9 +126,8 @@ function App() {
   const [showIndex, toggleShowIndex] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [queryTerm, setQueryTerm] = useState("");
   const [done, setDone] = useState(false);
-  const [availableMangas, setAvailableMangas] = useState([]);
+  const [availableMangas, setAvailableMangas] = useState<AvailableManga[]>([]);
   const [fullScreen, setFullScreen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fillScreen, setFillScreen] = useState(false);
@@ -131,25 +148,15 @@ function App() {
     visible,
   ]);
 
-  function slideToChapter(visible, isOpenReadManga) {
-    if (visible) {
+  function slideToChapter(visible: boolean, isOpenReadManga: boolean) {
+    if (visible && scrollRef?.current) {
       scrollRef.current.scrollIntoView();
       return;
     }
-    if (isOpenReadManga && window.innerWidth > "828") {
+    if (isOpenReadManga && window.innerWidth > 828 && scrollRef?.current) {
       scrollRef.current.scrollIntoView();
       return;
     }
-  }
-
-  async function getQueryFromSearch(term) {
-    let queryTerm;
-    for (const manga of availableMangas) {
-      if (manga.label === term) {
-        queryTerm = manga.id;
-      }
-    }
-    return queryTerm;
   }
 
   const axiosInstance = axios.create({
@@ -168,16 +175,16 @@ function App() {
     }
   );
 
-  function saveState(chapter, currentManga, currentPage, currentScrollOffset) {
+  function saveState(chapters: MangaChapters, currentManga: string, currentPage: CurrentPage, currentScrollOffset: CurrentOffset) {
     if (
       JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current) ||
       JSON.stringify(currentScrollOffset) !==
-        JSON.stringify(scrollPreviousRef.current)
+      JSON.stringify(scrollPreviousRef.current)
     ) {
       axiosInstance.post(`/save`, {
         name: currentManga,
         chapterNumber: chapterNumber,
-        chapter: chapter,
+        chapter: chapters,
         page: currentPage,
         scrollOffset: currentScrollOffset,
       });
@@ -186,15 +193,15 @@ function App() {
     }
   }
 
-  function updateDefaultValues(scrollDirectionPassed) {
+  function updateDefaultValues(scrollDirection: "horizontal" | "vertical") {
     axiosInstance.post("/saveDefaultValues", {
-      scrollPreference: scrollDirectionPassed,
+      scrollPreference: scrollDirection,
     });
   }
 
   async function signup() {
-    const username = usernameRef.current.value;
-    const password = passwordRef.current.value;
+    const username = usernameRef?.current?.value
+    const password = passwordRef?.current?.value
 
     if (!username) {
       toast("Please enter a username", { type: "error" });
@@ -218,13 +225,13 @@ function App() {
       });
   }
 
-  function saveToken(token) {
+  function saveToken(token: string) {
     localStorage.setItem("jwt", token);
   }
 
   async function signin() {
-    const username = usernameRef.current.value;
-    const password = passwordRef.current.value;
+    const username = usernameRef?.current?.value;
+    const password = passwordRef?.current?.value;
 
     if (!username) {
       toast("Please enter a username", { type: "error" });
@@ -253,7 +260,7 @@ function App() {
   }
 
   async function logout() {
-    return axiosInstance.post(`/logout`, {}).then((response) => {
+    return axiosInstance.post(`/logout`, {}).then(() => {
       localStorage.removeItem("jwt");
       firstPageLoadRef.current = true;
       setCurrentUser("");
@@ -261,7 +268,7 @@ function App() {
     });
   }
 
-  async function initPage(key) {
+  async function initPage() {
     if (firstPageLoadRef.current === true) {
       firstPageLoadRef.current = false;
       return axiosInstance
@@ -269,7 +276,7 @@ function App() {
         .then((response) => {
           addManga([
             ...response.data.posters,
-            { id: "addManga", name: "addManga", poster: plusmanga },
+            { id: "addManga", label: "addManga", poster: plusManga },
           ]);
           if (response.data.state.currentChapter) {
             setChapter(response.data.state.currentChapter);
@@ -301,7 +308,7 @@ function App() {
           setChapter({});
           setCurrentChapterNumber({});
           addManga([]);
-          setManga([]);
+          setMangaChapterList([]);
           setCurrentManga("");
           setCurrentPage({});
           setlastPage(false);
@@ -313,17 +320,18 @@ function App() {
   }
 
   async function addNewManga() {
-    const mangaName = await getQueryFromSearch(searchTerm);
+    console.log(currentManga);
+    const { id, label } = availableMangas.find(manga => manga.label === searchTerm) || { id: "", label: "" };
     setLoading(true);
-    if (!mangaName) {
+    if (!id) {
       toast("Make sure the name is in the list", { type: "error" });
       setLoading(false);
       return;
     }
-    const addMangaChapters = addMangaChaptersRef.current.value.toLowerCase();
+    const addMangaChapters = addMangaChaptersRef?.current?.value.toLowerCase();
 
     if (
-      !addMangaChapters.includes("-") &&
+      !addMangaChapters?.includes("-") &&
       addMangaChapters !== "latest" &&
       addMangaChapters !== "first"
     ) {
@@ -333,7 +341,7 @@ function App() {
       return;
     }
 
-    if (mangaName === "") {
+    if (id === "") {
       toast("Make sure the name is in the list", { type: "error" });
       console.log("empty manga name in add manga");
       setLoading(false);
@@ -344,7 +352,8 @@ function App() {
 
     return axiosInstance
       .post(`/addManga`, {
-        name: mangaName,
+        id,
+        label,
         chapters: addMangaChapters,
       })
       .then((response) => {
@@ -364,32 +373,33 @@ function App() {
   }
 
   async function addChapters() {
-    const mangaName = currentManga;
-    const newChapters = `${manga.at(-1)}-${parseInt(manga.at(-1)) + 10}`;
+    const { id, label } = availableMangas.find(manga => manga.label === currentManga) || { id: "", label: "" };
+    const newChapters = `${mangaChapterList.at(-1)}-${parseInt(mangaChapterList.at(-1) || "0") + 10}`;
     setLoading(true);
 
     setCurrentlyFetching(true);
 
     return axiosInstance
       .post(`/addManga`, {
-        name: mangaName,
+        id,
+        label,
         chapters: newChapters,
       })
       .then((response) => {
         setCurrentlyFetching(false);
 
-        if (manga.length === response.data.chapters.length) {
+        if (mangaChapterList.length === response.data.chapters.length) {
           toast("No new chapters released", { type: "info" });
         } else {
           toast("Chapters added", { type: "success" });
         }
 
         setLoading(false);
-        setManga(response.data.chapters);
+        setMangaChapterList(response.data.chapters);
       });
   }
 
-  async function getManga(mangaName) {
+  async function getManga(mangaName: string) {
     if (mangaName === "") {
       console.log("empty manga name in get manga");
       return;
@@ -405,18 +415,18 @@ function App() {
       });
   }
 
-  async function deleteManga(mangaName) {
+  async function deleteManga(mangaName: string) {
     return axiosInstance
       .post(`/deleteManga`, {
         name: mangaName,
       })
-      .then((response) => {
+      .then(() => {
         firstPageLoadRef.current = true;
         initPage();
       });
   }
 
-  async function getChapter(mangaName, chapterToGet) {
+  async function getChapter(mangaName: string, chapterToGet: string) {
     if (currentlyFetching) {
       toast("Please wait until new chapters are retrieved", { type: "info" });
       return;
@@ -455,37 +465,34 @@ function App() {
     setOpenReadManga(false);
     setVisible(false);
     document.documentElement.style.overflow = "scroll";
-    document.body.scroll = "yes";
   }
 
-  async function openReadManga(name) {
+  async function openReadManga(name: string) {
     if (currentlyFetching) {
       toast("Please wait until new manga is added", { type: "info" });
       return;
     }
 
-    console.log("called");
     if (name === "addManga") {
       setOpenAddManga(true);
     } else {
       setCurrentManga(name);
       if (!chapter[name]) {
-        await setChapter({ ...chapter, [name]: [] });
+        setChapter({ ...chapter, [name]: [] });
       }
 
       await navigator.wakeLock.request();
 
       const manga = await getManga(name);
-      setManga(manga);
+      setMangaChapterList(manga);
       setOpenReadManga(true);
 
       document.documentElement.style.overflow = "hidden";
-      document.body.scroll = "no";
     }
   }
 
-  function checkFirstOrLastPage(index, offset, fullHeight) {
-    if (index) {
+  function checkFirstOrLastPage(index: number, offset: number, fullHeight: number) {
+    if (index !== undefined) {
       if (index === chapter[currentManga].length - 1) {
         setlastPage(true);
         setFirstPage(false);
@@ -498,7 +505,7 @@ function App() {
       }
     }
 
-    if (offset) {
+    if (offset !== undefined) {
       if (offset === fullHeight) {
         setlastPage(true);
         setFirstPage(false);
@@ -512,15 +519,13 @@ function App() {
     }
   }
 
-  function updatePageOrOffset(page, offset) {
-    console.log("updatePageOrOffset", page, offset);
+  function updatePageOrOffset(page: number, offset: number) {
     setCurrentPage({ ...currentPage, [currentManga]: page });
     setCurrentOffset({ ...currentOffset, [currentManga]: offset });
   }
 
   function handleClicks() {
     if (clickTimeout !== null && clickTimeout2 !== null) {
-      console.log("triple click executes");
 
       setFillScreen(!fillScreen);
 
@@ -528,6 +533,7 @@ function App() {
       clearTimeout(clickTimeout2);
       clickTimeout2 = null;
       clickTimeout = null;
+
       navigator.wakeLock.request();
     } else if (clickTimeout !== null) {
       clickTimeout2 = setTimeout(() => {
@@ -538,7 +544,7 @@ function App() {
           //TODO: implement fullscreen
           setFullScreen(false);
         }
-        clearTimeout(clickTimeout2);
+        clearTimeout(clickTimeout2 as NodeJS.Timeout);
         clickTimeout2 = null;
         navigator.wakeLock.request();
       }, 250);
@@ -548,7 +554,7 @@ function App() {
         console.log("first click executes ");
         navigator.wakeLock.request();
         toggleShowIndex(!showIndex);
-        clearTimeout(clickTimeout);
+        clearTimeout(clickTimeout as NodeJS.Timeout);
         clickTimeout = null;
       }, 500);
     }
@@ -586,14 +592,16 @@ function App() {
             flexDirection: "row",
             width: "100%",
             justifyContent: "center",
+            alignItems: "center",
             backgroundColor: "cornflowerblue",
             position: "fixed",
             borderBottomLeftRadius: "5px",
             borderBottomRightRadius: "5px",
+            height: "40px"
           }}
         >
           <button
-            class="button-31"
+            className="button-31"
             style={{
               ...authButtonStyles,
               width: "38px",
@@ -629,7 +637,7 @@ function App() {
           </span>
           {visibleLogout && (
             <button
-              class="button-31"
+              className="button-31"
               style={{
                 ...authButtonStyles,
                 width: "38px",
@@ -650,16 +658,15 @@ function App() {
             </button>
           )}
         </div>
-        <div class="posters">
+        <div className="posters">
           {mangas.map((manga) => (
             <div style={{ display: "flex" }}>
               <img
                 style={imgStyles}
-                onClick={() => openReadManga(manga.name)}
+                onClick={() => openReadManga(manga.label)}
                 {...bind()}
                 alt={""}
                 key={manga.id}
-                name={manga.name}
                 src={manga.poster}
               />
               {longpressed && manga !== mangas[mangas.length - 1] && (
@@ -667,12 +674,12 @@ function App() {
                   style={{
                     height: "30px",
                     width: "45px",
-                    "margin-top": "10px",
-                    "margin-left": "-45px",
+                    marginTop: "10px",
+                    marginLeft: "-45px",
                     backgroundColor: "transparent",
                     border: "none",
                   }}
-                  onClick={() => deleteManga(manga.name)}
+                  onClick={() => deleteManga(manga.label)}
                 >
                   <FontAwesomeIcon icon={faTrash} size="xl" />
                 </button>
@@ -684,7 +691,7 @@ function App() {
 
       {visibleLogin && (
         <button
-          class="button-31"
+          className="button-31"
           style={{
             ...authButtonStyles,
             top: "50%",
@@ -704,44 +711,12 @@ function App() {
         onClose={() => setOpenAddManga(false)}
         loading={loading}
       >
-        {done && (
-          <Autocomplete
-            items={availableMangas}
-            shouldItemRender={(item, value) =>
-              item.label.toLowerCase().indexOf(value.toLowerCase()) > -1 &&
-              value.length > 2
-            }
-            getItemValue={(item) => item.label}
-            renderItem={(item, highlighted) => (
-              <div
-                key={item.id}
-                style={{
-                  backgroundColor: highlighted ? "#6495ed" : "transparent",
-                }}
-              >
-                {item.label}
-              </div>
-            )}
-            renderInput={function (props) {
-              return <input placeholder="MangaName" {...props} />;
-            }}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onSelect={(value, item) => {
-              setSearchTerm(value);
-              setQueryTerm(item.id);
-            }}
-            menuStyle={dropDownStyle}
-            sortItems={(a, b, value) => {
-              return a.label.length - b.label.length;
-            }}
-            renderMenu={function (items, value, style) {
-              return (
-                <div style={{ ...style, ...this.menuStyle }} children={items} />
-              );
-            }}
-          />
-        )}
+        <Autocomplete
+          items={availableMangas}
+          onSelect={(item) => {
+            setSearchTerm(item?.label || "");
+          }}
+        ></Autocomplete>
         <input
           ref={addMangaChaptersRef}
           placeholder={"Chapters (a-b, Latest, First)"}
@@ -774,12 +749,12 @@ function App() {
         {firstPage && (
           <>
             <button
-              class="button-31"
+              className="button-31"
               style={navChaptersRight}
               onClick={() =>
                 getChapter(
                   currentManga,
-                  parseInt(chapterNumber[currentManga]) - 1
+                  `${parseInt(chapterNumber[currentManga]) - 1}`
                 )
               }
             >
@@ -810,12 +785,12 @@ function App() {
           checkFirstOrLastPage={checkFirstOrLastPage}
         ></CustomImageGallery>
 
-        <div class="chaptersWrapper">
-          <span style={{ color: "white", "margin-right": "50px" }}>
+        <div className="chaptersWrapper">
+          <span style={{ color: "white", width: "100%", fontSize: "25px", marginBottom: "5px" }}>
             {currentManga}
           </span>
-          <div class="chapters">
-            {manga.map((chapter) => {
+          <div className="chapters">
+            {mangaChapterList.map((chapter) => {
               const color =
                 chapter === chapterNumber[currentManga] ? "#ffa07a" : "";
               const ref =
@@ -824,7 +799,7 @@ function App() {
                 <button
                   ref={ref}
                   style={{ backgroundColor: color, cursor: "pointer" }}
-                  class="button-31"
+                  className="button-31"
                   key={chapter}
                   onClick={() => getChapter(currentManga, chapter)}
                 >
@@ -834,8 +809,8 @@ function App() {
             })}
             {loading && (
               <>
-                <div class="loadingBox">
-                  <div class="lds-ring">
+                <div className="loadingBox">
+                  <div className="lds-ring">
                     <div></div>
                     <div></div>
                     <div></div>
@@ -847,7 +822,7 @@ function App() {
             {!loading && (
               <>
                 <button
-                  class="button-31"
+                  className="button-31"
                   style={{ cursor: "pointer" }}
                   key={"addChapters"}
                   onClick={() => addChapters()}
@@ -861,12 +836,12 @@ function App() {
         {lastPage && (
           <>
             <button
-              class="button-31"
+              className="button-31"
               style={navChaptersLeft}
               onClick={() =>
                 getChapter(
                   currentManga,
-                  parseInt(chapterNumber[currentManga]) + 1
+                  `${parseInt(chapterNumber[currentManga]) + 1}`
                 )
               }
             >
@@ -885,12 +860,12 @@ function App() {
 
         {visible && (
           <>
-            <div class="chaptersWrapperSmallScreen">
-              <span style={{ color: "white", "margin-right": "50px" }}>
+            <div className="chaptersWrapperSmallScreen">
+              <span style={{ color: "white", marginRight: "50px" }}>
                 {currentManga}
               </span>
-              <div class="chapters">
-                {manga.map((chapter) => {
+              <div className="chapters">
+                {mangaChapterList.map((chapter) => {
                   const color =
                     chapter === chapterNumber[currentManga] ? "#ffa07a" : "";
                   const ref =
@@ -899,7 +874,7 @@ function App() {
                     <button
                       ref={ref}
                       style={{ backgroundColor: color, cursor: "pointer" }}
-                      class="button-31"
+                      className="button-31"
                       key={chapter}
                       onClick={() => getChapter(currentManga, chapter)}
                     >
@@ -909,8 +884,8 @@ function App() {
                 })}
                 {loading && (
                   <>
-                    <div class="loadingBox">
-                      <div class="lds-ring">
+                    <div className="loadingBox">
+                      <div className="lds-ring">
                         <div></div>
                         <div></div>
                         <div></div>
@@ -922,7 +897,7 @@ function App() {
                 {!loading && (
                   <>
                     <button
-                      class="button-31"
+                      className="button-31"
                       style={{ cursor: "pointer" }}
                       key={"addChapters"}
                       onClick={() => addChapters()}
@@ -937,6 +912,22 @@ function App() {
         )}
       </ReadMangaModal>
 
+      {/* <div */}
+      {/*   style={{ */}
+      {/*     display: "flex", */}
+      {/*     flexDirection: "row", */}
+      {/*     width: "100%", */}
+      {/*     justifyContent: "center", */}
+      {/*     alignItems: "center", */}
+      {/*     backgroundColor: "cornflowerblue", */}
+      {/*     position: "fixed", */}
+      {/*     bottom: "0", */}
+      {/*     borderBottomLeftRadius: "5px", */}
+      {/*     borderBottomRightRadius: "5px", */}
+      {/*     height: "40px" */}
+      {/*   }} */}
+      {/* > */}
+      {/* </div> */}
       <ToastContainer position="top-right" theme="dark" autoClose={5000} />
     </>
   );

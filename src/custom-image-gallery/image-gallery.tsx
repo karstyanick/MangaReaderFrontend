@@ -1,10 +1,11 @@
-import { isNumber } from "lodash-es";
 import React, { useEffect, useRef, useState } from "react";
-import SwipeableViews from "react-swipeable-views";
-import { bindKeyboard } from "react-swipeable-views-utils";
 import "./image-gallery.css";
+import { Swiper as SwiperComponent, SwiperSlide } from 'swiper/react';
+// import Swiper styles
+import 'swiper/css';
+import { Keyboard } from "swiper/modules";
+import Swiper from "swiper";
 
-const BindKeyboardSwipeableViews = bindKeyboard(SwipeableViews);
 const ImageGallery = ({
   images,
   scrollDirection,
@@ -15,18 +16,17 @@ const ImageGallery = ({
   startingOffset,
   checkFirstOrLastPage,
 }) => {
-  const [currentImageWidth, setCurrentImageWidth] = useState(0);
-  const [showLoading, setShowLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [zoomed, setZoomed] = useState(false);
-  const imageRefs = useRef([]);
-  const wrapperRef = useRef(null);
-  const saveTimeoutRef = useRef(null);
-  const checkFirstLastTimeoutRef = useRef(null);
+  const imageRefs = useRef<HTMLImageElement[]>([]);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const checkFirstLastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
+    if (!wrapper) return
 
     if (wrapper && scrollDirection === "horizontal") {
       if (saveTimeoutRef.current) {
@@ -34,7 +34,6 @@ const ImageGallery = ({
         saveTimeoutRef.current = null;
       }
 
-      clearTimeout(saveTimeoutRef.current);
       wrapper.removeEventListener("scroll", handleScroll);
 
       if (checkFirstLastTimeoutRef.current) {
@@ -42,7 +41,6 @@ const ImageGallery = ({
         checkFirstLastTimeoutRef.current = null;
       }
 
-      clearTimeout(checkFirstLastTimeoutRef.current);
       wrapper.removeEventListener("scroll", handleScroll);
 
       return;
@@ -58,57 +56,23 @@ const ImageGallery = ({
   useEffect(() => {
     setCurrentIndex(startingIndex);
     setScrollPosition(startingOffset);
-  }, [startingIndex, startingOffset]);
+  }, []);
 
   useEffect(() => {
     console.log("fillScreen", fillScreen);
   }, [fillScreen]);
 
-  const handleChangeIndex = (index) => {
-    console.log("handleChangeIndex", index);
-    console.log("startingIndex", startingIndex);
+  const handleChangeIndex = (swiper: Swiper) => {
+    const index = swiper.realIndex;
     setCurrentIndex(index);
 
     updatePageOrOffset(index, scrollPosition);
     checkFirstOrLastPage(index);
-
-    if (imageRefs.current[index]) {
-      const imageHtmlElement = imageRefs.current[index];
-
-      const ratio =
-        imageHtmlElement.naturalWidth / imageHtmlElement.naturalHeight;
-      let newWidth = window.innerHeight * ratio;
-
-      if (window.innerWidth > 828) {
-        newWidth = (window.innerHeight - 80) * ratio;
-      }
-
-      if (isNumber(newWidth) && newWidth > 0) {
-        setCurrentImageWidth(newWidth);
-      }
-    }
   };
 
-  const onload = (index) => {
-    if (currentImageWidth === 0 && currentIndex === index) {
-      setShowLoading(false);
-
-      const ratio =
-        imageRefs.current[index].naturalWidth /
-        imageRefs.current[index].naturalHeight;
-      let newWidth = window.innerHeight * ratio;
-
-      if (window.innerWidth > 828) {
-        newWidth = (window.innerHeight - 80) * ratio;
-      }
-
-      if (isNumber(newWidth) && newWidth > 0) {
-        setCurrentImageWidth(newWidth);
-      }
-    }
-
+  const onload = (index: number) => {
+    if (!wrapperRef?.current) return
     if (index === images.length - 1) {
-      console.log("scrollPosition blahh", scrollPosition);
       wrapperRef.current.scrollTop = scrollPosition;
     }
   };
@@ -120,23 +84,25 @@ const ImageGallery = ({
 
     if (!saveTimeoutRef.current) {
       saveTimeoutRef.current = setTimeout(() => {
+        if (!wrapperRef?.current) return
         const scrollTop = Math.ceil(wrapperRef.current.scrollTop);
         setScrollPosition(scrollTop);
         updatePageOrOffset(currentIndex, scrollTop);
-        clearTimeout(saveTimeoutRef.current);
+        clearTimeout(saveTimeoutRef.current as NodeJS.Timeout);
         saveTimeoutRef.current = null;
       }, 5000);
     }
 
     if (!checkFirstLastTimeoutRef.current) {
       checkFirstLastTimeoutRef.current = setTimeout(() => {
+        if (!wrapperRef?.current) return
         const scrollTop = Math.ceil(wrapperRef.current.scrollTop);
         checkFirstOrLastPage(
           undefined,
           scrollTop,
           wrapperRef.current.scrollHeight - wrapperRef.current.offsetHeight
         );
-        clearTimeout(checkFirstLastTimeoutRef.current);
+        clearTimeout(checkFirstLastTimeoutRef.current as NodeJS.Timeout);
         checkFirstLastTimeoutRef.current = null;
       }, 200);
     }
@@ -154,55 +120,50 @@ const ImageGallery = ({
     <div
       ref={wrapperRef}
       className={`image-gallery ${scrollDirection}`}
-      style={{ width: currentImageWidth }}
     >
-      {showLoading && <div>Loading...</div>}
       {scrollDirection === "horizontal" ? (
-        <BindKeyboardSwipeableViews
-          index={currentIndex}
-          hysteresis={fillScreen ? 1.1 : 0.6}
-          containerStyle={{ height: "100%" }}
-          style={{ height: "100%" }}
-          slideStyle={
-            zoomed ? { width: "auto", display: "flex" } : { display: "flex" }
-          }
-          axis="x-reverse"
-          enableMouseEvents={true}
-          onChangeIndex={handleChangeIndex}
+        <SwiperComponent
+          dir={"rtl"}
+          modules={[Keyboard]}
+          initialSlide={startingIndex || 0}
+          keyboard={{ enabled: true }}
+          longSwipes={false}
+          onSlideChange={handleChangeIndex}
+          centeredSlides={true}
+          autoHeight={true}
         >
-          {images.map((image, index) => (
-            <div
-              key={index}
-              style={{
-                textAlign: "center",
-                width: "fit-content",
-                margin: "auto",
-              }}
+          {images.map((image: { original: string }, index: number) => (
+            <SwiperSlide
+              style={{ display: "flex", justifyContent: "center" }}
             >
               <img
-                style={zoomed ? { height: "100vh" } : { maxHeight: "100vh" }}
-                onDoubleClick={onDoubleClick}
-                ref={(el) => (imageRefs.current[index] = el)}
+                style={{ maxHeight: "calc(100vh - 80px)" }}
+                ref={(el) => {
+                  imageRefs.current[index] = el as HTMLImageElement;
+                }}
                 key={index}
                 src={image.original}
                 alt={""}
                 onLoad={() => onload(index)}
               />
-            </div>
+            </SwiperSlide>
           ))}
-        </BindKeyboardSwipeableViews>
+        </SwiperComponent>
       ) : (
-        images.map((image, index) => (
+        images.map((image: { original: string }, index: number) => (
           <img
-            ref={(el) => (imageRefs.current[index] = el)}
+            ref={(el) => {
+              imageRefs.current[index] = el as HTMLImageElement;
+            }}
             key={index}
             src={image.original}
             alt={""}
             onLoad={() => onload(index)}
           />
         ))
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

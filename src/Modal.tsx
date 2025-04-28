@@ -3,18 +3,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import ReactDOM from "react-dom";
 
-const MODAL_STYLES_1 = {
+const MODAL_STYLES_1: React.CSSProperties = {
   position: "fixed",
-  top: "10px",
   zIndex: 1000,
   display: "flex",
-  "flex-direction": "column",
+  flexDirection: "column",
   top: "50%",
   left: "50%",
   transform: "translate(-50%,-50%)",
 };
 
-const CLOSE_STYLES = {
+const CLOSE_STYLES: React.CSSProperties = {
   position: "fixed",
   right: "10px",
   top: "10px",
@@ -22,7 +21,7 @@ const CLOSE_STYLES = {
   zIndex: "1000",
 };
 
-const OVERLAY_STYLES = {
+const OVERLAY_STYLES: React.CSSProperties = {
   position: "fixed",
   top: 0,
   left: 0,
@@ -38,15 +37,15 @@ export function AddMangaModal({ addManga, open, children, onClose, loading }) {
   return ReactDOM.createPortal(
     <>
       <div style={OVERLAY_STYLES} />
-      <button class={"button-31"} style={CLOSE_STYLES} onClick={onClose}>
+      <button className={"button-31"} style={CLOSE_STYLES} onClick={onClose}>
         Close
       </button>
       <div style={MODAL_STYLES_1}>
         {children}
         {loading && (
           <>
-            <div class="loadingBox">
-              <div class="lds-ring">
+            <div className="loadingBox">
+              <div className="lds-ring">
                 <div></div>
                 <div></div>
                 <div></div>
@@ -58,8 +57,8 @@ export function AddMangaModal({ addManga, open, children, onClose, loading }) {
         {!loading && (
           <>
             <button
-              class={"button-31"}
-              style={{ "margin-top": "5px" }}
+              className={"button-31"}
+              style={{ marginTop: "5px" }}
               onClick={addManga}
             >
               Confirm
@@ -68,7 +67,7 @@ export function AddMangaModal({ addManga, open, children, onClose, loading }) {
         )}
       </div>
     </>,
-    document.getElementById("portal")
+    document.getElementById("portal") as HTMLElement
   );
 }
 
@@ -85,11 +84,11 @@ export function ReadMangaModal({
   return ReactDOM.createPortal(
     <>
       <div style={OVERLAY_STYLES} />
-      <div class={"openMangaWrapper"}>{children}</div>
+      <div className={"openMangaWrapper"}>{children}</div>
       <button
-        class="button-31 hiddenbutton"
+        className="button-31 hiddenbutton"
         onClick={setVisible}
-        style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+        style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, height: "40px" }}
       >
         <FontAwesomeIcon icon={faBars} />
       </button>
@@ -97,7 +96,7 @@ export function ReadMangaModal({
             <FontAwesomeIcon icon={faArrowsUpDownLeftRight} />
             </button> */}
       <button
-        class={"button-31"}
+        className={"button-31"}
         style={{
           position: "fixed",
           zIndex: 1000,
@@ -106,7 +105,7 @@ export function ReadMangaModal({
           width: "0px",
           minHeight: "0px",
           minWidth: "0px",
-          height: "35px",
+          height: "40px",
           fontSize: "small",
           display: "flex",
           justifyContent: "center",
@@ -119,7 +118,7 @@ export function ReadMangaModal({
         <FontAwesomeIcon icon={faTimes} size="lg" />
       </button>
     </>,
-    document.getElementById("portal")
+    document.getElementById("portal") as HTMLElement
   );
 }
 
@@ -129,19 +128,19 @@ export function SignupModal({ signup, signin, children, open, onClose }) {
   return ReactDOM.createPortal(
     <>
       <div style={OVERLAY_STYLES} />
-      <button class={"button-31"} style={CLOSE_STYLES} onClick={onClose}>
+      <button className={"button-31"} style={CLOSE_STYLES} onClick={onClose}>
         Close
       </button>
       <div style={MODAL_STYLES_1}>
         {children}
-        <button class={"button-31"} onClick={signup}>
+        <button className={"button-31"} onClick={signup}>
           Signup
         </button>
-        <button class={"button-31"} onClick={signin}>
+        <button className={"button-31"} onClick={signin}>
           Singin
         </button>
       </div>
     </>,
-    document.getElementById("portal")
+    document.getElementById("portal") as HTMLElement
   );
 }
