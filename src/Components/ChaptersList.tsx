@@ -24,11 +24,16 @@ export const ChaptersList: React.FC<ChaptersListProps> = ({ currentManga, mangaC
     scrollRef.current.scrollIntoView({ block: "center" });
   }, [scrollRef, visible]);
 
+  function decodeHtml(html: string) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.documentElement.textContent ?? "";
+  }
+
   return (
     <>
       <div className="chaptersWrapper">
         <span style={{ color: "white", backgroundColor: "cornflowerblue", borderTopLeftRadius: "10px", borderTopRightRadius: "10px", fontSize: "25px", padding: "10px", textAlign: "center" }}>
-          {currentManga}
+          {decodeHtml(currentManga)}
         </span>
         <div className="chapters">
           {mangaChapterList.map((chapter) => {

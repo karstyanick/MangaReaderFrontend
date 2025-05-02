@@ -506,7 +506,7 @@ function App() {
     <>
       {visibleLogin && (
         <button
-          className="button-31"
+          className="button-31 signInButton"
           onClick={() => setOpenSignup(true)}
         >
           Sign in

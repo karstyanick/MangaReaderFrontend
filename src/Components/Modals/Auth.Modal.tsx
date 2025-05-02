@@ -16,14 +16,14 @@ export const SignupModal: React.FC<SignupModalProps> = ({ signup, signin, childr
 
   return ReactDOM.createPortal(
     <>
-      <div className="modal" />
+      <div className="modalWrapper" />
       <CloseButton onClose={onClose} />
       <div style={MODAL_STYLES_1}>
         {children}
-        <button className={"button-31"} onClick={signup}>
+        <button className={"button-31 authButton"} onClick={signup}>
           Signup
         </button>
-        <button className={"button-31"} onClick={signin}>
+        <button className={"button-31 authButton"} onClick={signin}>
           Singin
         </button>
       </div>
