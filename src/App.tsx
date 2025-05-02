@@ -120,13 +120,13 @@ function App() {
     }
   );
 
-  function saveState(chapters: MangaChapters, currentManga: string, currentPage: CurrentPage, force: boolean = false) {
+  function saveState(chapters: MangaChapters, currentManga: string, currentPage: CurrentPage, force: boolean = false, passNewChapterNumber?: { [mangaLabel: string]: number }) {
     if (
       JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current) || force
     ) {
       axiosInstance.post(`/save`, {
         name: currentManga,
-        chapterNumber: chapterNumber,
+        chapterNumber: passNewChapterNumber || chapterNumber,
         chapter: chapters,
         page: currentPage,
       });
@@ -382,10 +382,13 @@ function App() {
         } else {
           setChapter({ ...chapter, [mangaName]: response.data.links });
           setCurrentPage({ ...currentPage, [mangaName]: 0 });
-          saveState({ ...chapter, [mangaName]: response.data.links }, currentManga, { ...currentPage, [mangaName]: 0 }, true);
           setCurrentChapterNumber({
             ...chapterNumber,
             [mangaName]: response.data.chapter,
+          });
+          saveState({ ...chapter, [mangaName]: response.data.links }, currentManga, { ...currentPage, [mangaName]: 0 }, true, {
+            ...chapterNumber,
+            [mangaName]: response.data.chapter
           });
           setlastPage(false);
         }
