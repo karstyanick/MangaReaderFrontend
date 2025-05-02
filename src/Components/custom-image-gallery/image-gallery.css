@@ -1,0 +1,27 @@
+.image-gallery {
+  max-height: calc(100vh - 80px);
+  width: 70%;
+}
+
+.image-gallery img {
+  max-width: 100%;
+  height: auto;
+}
+.vertical {
+  display: flex;
+  flex-direction: column;
+  width:50%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.horizontal {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+@media (max-width: 828px) {
+  .image-gallery {
+    width: 100%
+  }
+}
