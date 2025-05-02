@@ -69,6 +69,11 @@
   right:0%;
 }
 
+.zoomIcon {
+  background-color: transparent;
+  right: 10%;
+}
+
 .scrollDirButton {
   background-color: #4c88f3;
   left:0%;

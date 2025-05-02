@@ -565,8 +565,8 @@ function App() {
         setVisible={() => {
           setVisible(!visible);
         }}
-        zoomed={fillScreen}
-        setScrollDirection={handleScrollDirectionChange}
+        showZoomed={isOpenReadManga && fillScreen}
+        onZoomClicked={() => { setFillScreen(false) }}
       >
         {firstPage && (
           <>
@@ -610,6 +610,7 @@ function App() {
           images={chapter[currentManga]}
           scrollDirection={scrollDirection}
           checkFirstOrLastPage={checkFirstOrLastPage}
+          onFillScreen={setFillScreen}
         ></CustomImageGallery>
 
         {lastPage && (

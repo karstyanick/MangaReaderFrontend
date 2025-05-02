@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {
   faBars,
-  faTimes,
+  faMagnifyingGlassPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { CloseButton } from "../Buttons/CloseButton";
@@ -12,8 +12,8 @@ export interface ReadMangaModalProps {
   children: any,
   onClose: () => void,
   setVisible: () => void,
-  zoomed: boolean,
-  setScrollDirection: () => void
+  showZoomed: boolean;
+  onZoomClicked: () => void,
 }
 
 export const ReadMangaModal: React.FC<ReadMangaModalProps> = ({
@@ -21,8 +21,8 @@ export const ReadMangaModal: React.FC<ReadMangaModalProps> = ({
   open,
   onClose,
   setVisible,
-  zoomed,
-  setScrollDirection,
+  showZoomed,
+  onZoomClicked
 }) => {
   if (!open) return null;
 
@@ -35,6 +35,11 @@ export const ReadMangaModal: React.FC<ReadMangaModalProps> = ({
       >
         <FontAwesomeIcon icon={faBars} />
       </button>
+      {showZoomed && (
+        <button onClick={onZoomClicked} className="topBarButton zoomIcon">
+          <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
+        </button>
+      )}
       <CloseButton onClose={onClose} />
     </div>,
     document.getElementById("portal") as HTMLElement

@@ -4,33 +4,34 @@ import "./image-gallery.css";
 // import Swiper styles
 import Swiper from "swiper";
 import 'swiper/css';
-import { Keyboard } from "swiper/modules";
+import { Keyboard, Zoom } from "swiper/modules";
 
 export interface ImageGalleryProps {
   images: { original: string }[]
   scrollDirection: "horizontal" | "vertical"
-  fillScreen: boolean
   onClick: () => void
   updatePageOrOffset: (index: number) => void
   startingIndex: number
   checkFirstOrLastPage: (index: number | undefined, offset: number | undefined, fullHeight: number | undefined) => void
+  onFillScreen: (isFilled: boolean) => void;
+  fillScreen: boolean
 }
 
 const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
   scrollDirection,
   fillScreen,
-  onClick,
   updatePageOrOffset,
   startingIndex,
   checkFirstOrLastPage,
+  onFillScreen,
 }) => {
-  const [zoomed, setZoomed] = useState(false);
   const imageRefs = useRef<HTMLImageElement[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const checkFirstLastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [swiperComponent, setSwiperComponent] = useState<Swiper>(null);
+  const [zoomed, setZoomed] = useState<boolean>(false);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -58,9 +59,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       wrapperRef.current.scrollTop = 0;
     }
   }, [images]);
-
-  useEffect(() => {
-  }, [fillScreen]);
 
   const handleChangeIndex = (swiper: Swiper) => {
     if (!saveTimeoutRef.current) {
@@ -129,13 +127,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   };
 
   useEffect(() => {
-  }, [zoomed]);
-
-  const onDoubleClick = () => {
-    setZoomed(!zoomed);
-  };
-
-  useEffect(() => {
     if (scrollDirection !== "vertical" || !wrapperRef.current) return;
 
     const observer = new IntersectionObserver(
@@ -167,6 +158,30 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     };
   }, [images]);
 
+  const handleZoom = (swiper: Swiper, _: number, imageElement: HTMLImageElement) => {
+    if (!zoomed) {
+      imageElement.style.maxWidth = "none";
+      imageElement.style.height = "calc(100vh - 80px)";
+      swiper.allowTouchMove = false;
+      swiper.updateAutoHeight(300);
+      setZoomed(true);
+      onFillScreen(true);
+    } else {
+      imageElement.style.maxWidth = "";
+      imageElement.style.height = "";
+      swiper.allowTouchMove = true;
+      swiper.updateAutoHeight(300);
+      setZoomed(false);
+      onFillScreen(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!fillScreen && zoomed) {
+      swiperComponent.zoom.out();
+    }
+  }, [fillScreen])
+
   return (
     <div
       ref={wrapperRef}
@@ -175,7 +190,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       {scrollDirection === "horizontal" ? (
         <SwiperComponent
           dir={"rtl"}
-          modules={[Keyboard]}
+          modules={[Keyboard, Zoom]}
+          zoom={{ maxRatio: 1.0000001 }}
           initialSlide={startingIndex || 0}
           keyboard={{ enabled: true }}
           longSwipes={false}
@@ -183,21 +199,24 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           onSwiper={setSwiperComponent}
           centeredSlides={true}
           autoHeight={true}
+          onZoomChange={handleZoom}
         >
           {images.map((image: { original: string }, index: number) => (
             <SwiperSlide
               style={{ display: "flex", justifyContent: "center" }}
             >
-              <img
-                loading="lazy"
-                style={{ maxHeight: "calc(100vh - 80px)" }}
-                ref={(el) => {
-                  imageRefs.current[index] = el as HTMLImageElement;
-                }}
-                key={index}
-                src={image.original}
-                alt={""}
-              />
+              <div className="swiper-zoom-container">
+                <img
+                  loading="lazy"
+                  style={{ maxHeight: "calc(100vh - 80px)" }}
+                  ref={(el) => {
+                    imageRefs.current[index] = el as HTMLImageElement;
+                  }}
+                  key={index}
+                  src={image.original}
+                  alt={""}
+                />
+              </div>
             </SwiperSlide>
           ))}
         </SwiperComponent>
