@@ -12,6 +12,7 @@ root.render(
 
 document.body.style.background = "#565656"
 document.body.style.margin = "0"
+document.body.style.padding = "0"
 document.body.oncontextmenu = function(e) {
   e.preventDefault();
   e.stopPropagation();

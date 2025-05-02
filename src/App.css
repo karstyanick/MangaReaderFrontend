@@ -26,17 +26,65 @@
   width: 100%;
 }
 
+.button-31:hover{
+  background-color: #5077BD;
+}
+
+.topBarButton {
+  cursor: pointer;
+  color: #fff;
+  border-style: none;
+  position: fixed;
+  z-index: 1000;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 0%;
+}
+
+.closeButton {
+  background-color: #222;
+  right:0%;
+}
+
+.chaptersButton {
+  background-color: #222;
+  left:0%;
+}
+
+.logoutButton {
+  background-color: #4c88f3;
+  right:0%;
+}
+
+.scrollDirButton {
+  background-color: #4c88f3;
+  left:0%;
+}
+
+.modalWrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0, .7);
+}
+
 .openMangaWrapper {
   position: fixed;
   z-index: 1000;
   top: 50%;
   display: flex;
   justify-content: center;
-  flex-direction: row-reverse;
+  flex-direction: row;
   width: 100%;
   transform: translate(0, -50%);
+  align-items: center;
+  height: calc(100vh - 80px);
   max-height: calc(100vh - 80px);
-  align-content: center;
 }
 
 .openMangaWrapperZoomed {
@@ -106,9 +154,12 @@ html {
 
 .chaptersWrapper {
   width: 200px;
+  border-radius: 10px;
   margin-right: 30px;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  background-color: #222;
 }
 
 .chaptersWrapperSmallScreen {
@@ -120,27 +171,11 @@ html {
   overflow: auto;
 }
 
-.hiddenbutton {
-  display: none;
-  width: 40px;
-  height: 35px;
-  position: fixed;
-  left: 0;
-  top: 0;
-  min-height: 0;
-  z-index: 1000;
-}
-
-.image-gallery {
-  max-height: calc(100vh - 80px);
-  width: 70%;
-}
-
 .posters {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  margin-top: 40px;
+  margin-top: 60px;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, 150px);
   justify-content: center;
 }
 
@@ -154,9 +189,6 @@ html {
   }
   .openMangaWrapper {
     max-height: calc(100vh);
-  }
-  .image-gallery {
-    width: 100%
   }
 }
 

@@ -1,42 +1,26 @@
 import {
   faArrowLeft,
   faArrowRight,
-  faArrowsLeftRight,
-  faArrowsUpDown,
-  faRightFromBracket,
-  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useLongPress } from "use-long-press";
-import { Autocomplete } from "./Autocomplete";
-import CustomImageGallery from "./custom-image-gallery/image-gallery";
-import { AddMangaModal, ReadMangaModal, SignupModal } from "./Modal";
+import { Autocomplete, AvailableManga } from "./Components/Autocomplete";
+import { ChapterNumber, ChaptersList } from "./Components/ChaptersList";
+import { MangaCard, Posters } from "./Components/Posters";
+import { TopBar } from "./Components/TopBar";
+import CustomImageGallery from "./Components/custom-image-gallery/image-gallery"
 import plusManga from "./plusmanga.png";
+import { AddMangaModal } from "./Components/Modals/AddManga.Modal";
+import { SignupModal } from "./Components/Modals/Auth.Modal";
+import { ReadMangaModal } from "./Components/Modals/ReadManga.Modal";
 
 axios.defaults.withCredentials = true;
 
-let BACKENDHOST = "https://reallyfluffy.dev/api";
-//let BACKENDHOST = "http://localhost:5000"
-
-const imgStyles = {
-  height: "225px",
-  width: "150px",
-  margin: "10px",
-  borderRadius: "10px",
-  cursor: "pointer",
-};
-
-const authButtonStyles: React.CSSProperties = {
-  width: "100px",
-  minHeight: "40px",
-  padding: "0",
-  cursor: "pointer",
-  borderRadius: "0px"
-};
+//let BACKENDHOST = "https://reallyfluffy.dev/api";
+let BACKENDHOST = "http://localhost:5000"
 
 const navChaptersRight: React.CSSProperties = {
   height: "40px",
@@ -70,27 +54,8 @@ export interface MangaChapters {
   }[];
 };
 
-export interface ChapterNumber {
-  [mangaName: string]: string
-};
-
 export interface CurrentPage {
   [mangaName: string]: number
-};
-
-export interface CurrentOffset {
-  [mangaName: string]: number
-};
-
-export interface MangaCard {
-  id: string,
-  label: string,
-  poster: string
-};
-
-export interface AvailableManga {
-  id: string,
-  label: string
 };
 
 function App() {
@@ -102,8 +67,6 @@ function App() {
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
 
-  const scrollRef = useRef<HTMLButtonElement | null>(null);
-
   const pagePreviousRef = useRef({});
   const scrollPreviousRef = useRef({});
   const firstPageLoadRef = useRef(true);
@@ -114,7 +77,6 @@ function App() {
   const [mangaChapterList, setMangaChapterList] = useState<string[]>([]);
   const [currentManga, setCurrentManga] = useState("");
   const [currentPage, setCurrentPage] = useState<CurrentPage>({});
-  const [currentOffset, setCurrentOffset] = useState<CurrentOffset>({});
   const [isOpenSignup, setOpenSignup] = useState(false);
   const [isOpenAddManga, setOpenAddManga] = useState(false);
   const [isOpenReadManga, setOpenReadManga] = useState(false);
@@ -126,38 +88,21 @@ function App() {
   const [showIndex, toggleShowIndex] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [done, setDone] = useState(false);
   const [availableMangas, setAvailableMangas] = useState<AvailableManga[]>([]);
   const [fullScreen, setFullScreen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fillScreen, setFillScreen] = useState(false);
-  const [longpressed, setLongPressed] = useState(false);
   const [currentlyFetching, setCurrentlyFetching] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<"horizontal" | "vertical">("horizontal");
 
   useEffect(() => {
     initPage();
-    saveState(chapter, currentManga, currentPage, currentOffset);
-    slideToChapter(visible, isOpenReadManga);
+    saveState(chapter, currentManga, currentPage);
   }, [
     currentPage,
-    currentOffset,
     chapter,
     currentManga,
-    isOpenReadManga,
-    visible,
   ]);
-
-  function slideToChapter(visible: boolean, isOpenReadManga: boolean) {
-    if (visible && scrollRef?.current) {
-      scrollRef.current.scrollIntoView();
-      return;
-    }
-    if (isOpenReadManga && window.innerWidth > 828 && scrollRef?.current) {
-      scrollRef.current.scrollIntoView();
-      return;
-    }
-  }
 
   const axiosInstance = axios.create({
     baseURL: BACKENDHOST,
@@ -175,18 +120,15 @@ function App() {
     }
   );
 
-  function saveState(chapters: MangaChapters, currentManga: string, currentPage: CurrentPage, currentScrollOffset: CurrentOffset) {
+  function saveState(chapters: MangaChapters, currentManga: string, currentPage: CurrentPage, force: boolean = false) {
     if (
-      JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current) ||
-      JSON.stringify(currentScrollOffset) !==
-      JSON.stringify(scrollPreviousRef.current)
+      JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current) || force
     ) {
       axiosInstance.post(`/save`, {
         name: currentManga,
         chapterNumber: chapterNumber,
         chapter: chapters,
         page: currentPage,
-        scrollOffset: currentScrollOffset,
       });
 
       pagePreviousRef.current = currentPage;
@@ -287,14 +229,12 @@ function App() {
             pagePreviousRef.current = response.data.state.currentPage;
           }
           if (response.data.state.currentScrollOffset) {
-            setCurrentOffset(response.data.state.currentScrollOffset);
             scrollPreviousRef.current = response.data.state.currentScrollOffset;
           }
           setCurrentUser(response.data.username);
           setVisibleLogin(false);
           setVisibleLogout(true);
           setAvailableMangas(response.data.availableMangas);
-          setDone(true);
           setScrollDirection(response.data.scrollPreference);
         })
         .catch((error) => {
@@ -320,7 +260,6 @@ function App() {
   }
 
   async function addNewManga() {
-    console.log(currentManga);
     const { id, label } = availableMangas.find(manga => manga.label === searchTerm) || { id: "", label: "" };
     setLoading(true);
     if (!id) {
@@ -336,14 +275,12 @@ function App() {
       addMangaChapters !== "first"
     ) {
       toast("Incorrect input format", { type: "error" });
-      console.log("Incorrect input format");
       setLoading(false);
       return;
     }
 
     if (id === "") {
       toast("Make sure the name is in the list", { type: "error" });
-      console.log("empty manga name in add manga");
       setLoading(false);
       return;
     }
@@ -401,7 +338,6 @@ function App() {
 
   async function getManga(mangaName: string) {
     if (mangaName === "") {
-      console.log("empty manga name in get manga");
       return;
     }
     return axiosInstance
@@ -444,9 +380,9 @@ function App() {
         if (!response?.data?.links) {
           toast("Please retrieve further chapters", { type: "error" });
         } else {
-          console.log(response.data.links);
           setChapter({ ...chapter, [mangaName]: response.data.links });
           setCurrentPage({ ...currentPage, [mangaName]: 0 });
+          saveState({ ...chapter, [mangaName]: response.data.links }, currentManga, { ...currentPage, [mangaName]: 0 }, true);
           setCurrentChapterNumber({
             ...chapterNumber,
             [mangaName]: response.data.chapter,
@@ -464,7 +400,7 @@ function App() {
 
     setOpenReadManga(false);
     setVisible(false);
-    document.documentElement.style.overflow = "scroll";
+    document.documentElement.style.overflowY = "scroll";
   }
 
   async function openReadManga(name: string) {
@@ -486,8 +422,7 @@ function App() {
       const manga = await getManga(name);
       setMangaChapterList(manga);
       setOpenReadManga(true);
-
-      document.documentElement.style.overflow = "hidden";
+      document.documentElement.style.overflowY = "hidden";
     }
   }
 
@@ -519,9 +454,8 @@ function App() {
     }
   }
 
-  function updatePageOrOffset(page: number, offset: number) {
+  function updatePageOrOffset(page: number) {
     setCurrentPage({ ...currentPage, [currentManga]: page });
-    setCurrentOffset({ ...currentOffset, [currentManga]: offset });
   }
 
   function handleClicks() {
@@ -549,9 +483,7 @@ function App() {
         navigator.wakeLock.request();
       }, 250);
     } else {
-      console.log("single click");
       clickTimeout = setTimeout(() => {
-        console.log("first click executes ");
         navigator.wakeLock.request();
         toggleShowIndex(!showIndex);
         clearTimeout(clickTimeout as NodeJS.Timeout);
@@ -559,19 +491,6 @@ function App() {
       }, 500);
     }
   }
-
-  const callback = React.useCallback(() => {
-    setLongPressed(!longpressed);
-  }, [longpressed]);
-
-  const bind = useLongPress(callback, {
-    onStart: () => console.log("Press started"),
-    onFinish: () => console.log("Long press finished"),
-    onCancel: () => console.log("Press cancelled"),
-    onMove: () => console.log("Detected mouse or touch movement"),
-    threshold: 550,
-    cancelOnMovement: true,
-  });
 
   const handleScrollDirectionChange = () => {
     if (scrollDirection === "horizontal") {
@@ -585,126 +504,26 @@ function App() {
 
   return (
     <>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "cornflowerblue",
-            position: "fixed",
-            borderBottomLeftRadius: "5px",
-            borderBottomRightRadius: "5px",
-            height: "40px"
-          }}
-        >
-          <button
-            className="button-31"
-            style={{
-              ...authButtonStyles,
-              width: "38px",
-              left: "0",
-              position: "absolute",
-              backgroundColor: "#4c88f3",
-            }}
-            onClick={handleScrollDirectionChange}
-          >
-            {scrollDirection === "horizontal" && (
-              <FontAwesomeIcon
-                icon={faArrowsLeftRight}
-                style={{
-                  left: "50%",
-                  position: "absolute",
-                  transform: "translate(-50%, -50%)",
-                }}
-              />
-            )}
-            {scrollDirection === "vertical" && (
-              <FontAwesomeIcon
-                icon={faArrowsUpDown}
-                style={{
-                  left: "50%",
-                  position: "absolute",
-                  transform: "translate(-50%, -50%)",
-                }}
-              />
-            )}
-          </button>
-          <span style={{ fontSize: "30px", color: "white" }}>
-            {currentUser}
-          </span>
-          {visibleLogout && (
-            <button
-              className="button-31"
-              style={{
-                ...authButtonStyles,
-                width: "38px",
-                right: "0",
-                position: "absolute",
-                backgroundColor: "#4c88f3",
-              }}
-              onClick={() => logout()}
-            >
-              <FontAwesomeIcon
-                icon={faRightFromBracket}
-                style={{
-                  left: "50%",
-                  position: "absolute",
-                  transform: "translate(-50%, -50%)",
-                }}
-              />
-            </button>
-          )}
-        </div>
-        <div className="posters">
-          {mangas.map((manga) => (
-            <div style={{ display: "flex" }}>
-              <img
-                style={imgStyles}
-                onClick={() => openReadManga(manga.label)}
-                {...bind()}
-                alt={""}
-                key={manga.id}
-                src={manga.poster}
-              />
-              {longpressed && manga !== mangas[mangas.length - 1] && (
-                <button
-                  style={{
-                    height: "30px",
-                    width: "45px",
-                    marginTop: "10px",
-                    marginLeft: "-45px",
-                    backgroundColor: "transparent",
-                    border: "none",
-                  }}
-                  onClick={() => deleteManga(manga.label)}
-                >
-                  <FontAwesomeIcon icon={faTrash} size="xl" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
       {visibleLogin && (
         <button
           className="button-31"
-          style={{
-            ...authButtonStyles,
-            top: "50%",
-            transform: "translate(-50%,-50%)",
-            position: "absolute",
-            left: "50%",
-          }}
           onClick={() => setOpenSignup(true)}
         >
           Sign in
         </button>
       )}
-
+      <TopBar
+        currentUser={currentUser}
+        scrollDirection={scrollDirection}
+        visibleLogout={visibleLogout}
+        handleScrollDirectionChange={handleScrollDirectionChange}
+        logout={logout}
+      />
+      <Posters
+        mangas={mangas}
+        openReadManga={openReadManga}
+        deleteManga={deleteManga}
+      />
       <AddMangaModal
         addManga={addNewManga}
         open={isOpenAddManga}
@@ -770,10 +589,18 @@ function App() {
             </button>
           </>
         )}
-
+        <ChaptersList
+          currentManga={currentManga}
+          mangaChapterList={mangaChapterList}
+          chapterNumber={chapterNumber}
+          getChapter={getChapter}
+          loading={loading}
+          lastPage={lastPage}
+          addChapters={addChapters}
+          visible={visible}
+        />
         <CustomImageGallery
           startingIndex={currentPage[currentManga]}
-          startingOffset={currentOffset[currentManga]}
           updatePageOrOffset={updatePageOrOffset}
           onClick={() => handleClicks()}
           fillScreen={fillScreen}
@@ -782,54 +609,6 @@ function App() {
           checkFirstOrLastPage={checkFirstOrLastPage}
         ></CustomImageGallery>
 
-        <div className="chaptersWrapper">
-          <span style={{ color: "white", width: "100%", fontSize: "25px", marginBottom: "5px" }}>
-            {currentManga}
-          </span>
-          <div className="chapters">
-            {mangaChapterList.map((chapter) => {
-              const color =
-                chapter === chapterNumber[currentManga] ? "#ffa07a" : "";
-              const ref =
-                chapter === chapterNumber[currentManga] ? scrollRef : null;
-              return (
-                <button
-                  ref={ref}
-                  style={{ backgroundColor: color, cursor: "pointer" }}
-                  className="button-31"
-                  key={chapter}
-                  onClick={() => getChapter(currentManga, chapter)}
-                >
-                  {chapter}
-                </button>
-              );
-            })}
-            {loading && (
-              <>
-                <div className="loadingBox">
-                  <div className="lds-ring">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                  </div>
-                </div>
-              </>
-            )}
-            {!loading && (
-              <>
-                <button
-                  className="button-31"
-                  style={{ cursor: "pointer" }}
-                  key={"addChapters"}
-                  onClick={() => addChapters()}
-                >
-                  Add Chapters{" "}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
         {lastPage && (
           <>
             <button
@@ -855,73 +634,7 @@ function App() {
           </>
         )}
 
-        {visible && (
-          <>
-            <div className="chaptersWrapperSmallScreen">
-              <div className="chapters">
-                {mangaChapterList.map((chapter) => {
-                  const color =
-                    chapter === chapterNumber[currentManga] ? "#ffa07a" : "";
-                  const ref =
-                    chapter === chapterNumber[currentManga] ? scrollRef : null;
-                  return (
-                    <button
-                      ref={ref}
-                      style={{ backgroundColor: color, cursor: "pointer" }}
-                      className="button-31"
-                      key={chapter}
-                      onClick={() => getChapter(currentManga, chapter)}
-                    >
-                      {chapter}
-                    </button>
-                  );
-                })}
-                {loading && (
-                  <>
-                    <div className="loadingBox">
-                      <div className="lds-ring">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                      </div>
-                    </div>
-                  </>
-                )}
-                {!loading && (
-                  <>
-                    <button
-                      className="button-31"
-                      style={{ cursor: "pointer" }}
-                      key={"addChapters"}
-                      onClick={() => addChapters()}
-                    >
-                      Add Chapters{" "}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </>
-        )}
       </ReadMangaModal>
-
-      {/* <div */}
-      {/*   style={{ */}
-      {/*     display: "flex", */}
-      {/*     flexDirection: "row", */}
-      {/*     width: "100%", */}
-      {/*     justifyContent: "center", */}
-      {/*     alignItems: "center", */}
-      {/*     backgroundColor: "cornflowerblue", */}
-      {/*     position: "fixed", */}
-      {/*     bottom: "0", */}
-      {/*     borderBottomLeftRadius: "5px", */}
-      {/*     borderBottomRightRadius: "5px", */}
-      {/*     height: "40px" */}
-      {/*   }} */}
-      {/* > */}
-      {/* </div> */}
       <ToastContainer position="top-right" theme="dark" autoClose={5000} />
     </>
   );

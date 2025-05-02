@@ -1,14 +1,16 @@
 .image-gallery {
-  display: flex; /* Or use grid for more control */
-  flex-wrap: wrap; /* Or adjust grid-template-columns for grid layout */
+  max-height: calc(100vh - 80px);
+  width: 70%;
 }
 
 .image-gallery img {
   max-width: 100%;
   height: auto;
 }
-
 .vertical {
+  display: flex;
+  flex-direction: column;
+  width:50%;
   overflow-y: scroll;
   overflow-x: hidden;
 }
@@ -16,12 +18,10 @@
 .horizontal {
   overflow-x: hidden;
   overflow-y: hidden;
-  height: 100%;
 }
 
 @media (max-width: 828px) {
-  .vertical {
-    overflow-y: scroll;
-    overflow-x: hidden;
+  .image-gallery {
+    width: 100%
   }
 }

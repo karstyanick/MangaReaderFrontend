@@ -1,7 +1,11 @@
 
 import { useCombobox } from 'downshift';
 import React from 'react';
-import { AvailableManga } from './App';
+
+export interface AvailableManga {
+  id: string,
+  label: string
+};
 
 interface AutocompleteProps {
   items: AvailableManga[];
