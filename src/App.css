@@ -1,32 +1,29 @@
-.button-31 {
+.buttonBasic {
   background-color: #222;
   border-radius: 4px;
   border-style: none;
-  box-sizing: border-box;
   color: #fff;
   cursor: pointer;
-  display: inline-block;
   font-family: "Farfetch Basis", "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
   font-weight: 700;
   line-height: 1.5;
-  margin: 0;
-  max-width: none;
   min-height: 44px;
   min-width: 10px;
   outline: none;
-  overflow: hidden;
-  padding: 9px 20px 8px;
   position: relative;
   text-align: center;
-  text-transform: none;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
   width: 100%;
 }
 
-.button-31:hover{
+.authSelector { display:flex; margin-bottom:1rem; }
+.authSelector button {
+  flex:1; border:none; cursor:pointer; padding:.5rem 1rem;
+  background:#222; font-weight:600; transition:background .2s;
+}
+.authSelector button.active { background:cornflowerBlue; }
+
+.buttonBasic:hover{
   background-color: #5077BD;
 }
 
@@ -126,15 +123,10 @@
   width: max-content !important;
 }
 
-.button-31:hover,
-.button-31:focus {
-  opacity: 0.75;
-}
-
 input {
   width: 100%;
   padding: 12px 20px;
-  margin: 8px 0;
+  margin-bottom: 5px;
   box-sizing: border-box;
 }
 
@@ -189,6 +181,7 @@ html {
 
 .posters {
   margin-top: 60px;
+  margin-bottom: 20px;
   display: grid;
   gap: 20px;
   grid-template-columns: repeat(auto-fit, 150px);
@@ -256,4 +249,22 @@ html {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.pageNumbersCurrent {
+  color: white;
+  font-size: 20px;
+}
+.pageNumbersTotal {
+  color: white;
+  font-size: 20px;
+}
+.pagination {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 15px
+}
+.paginationHidden {
+  display: none
 }

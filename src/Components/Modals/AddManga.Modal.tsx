@@ -1,6 +1,3 @@
-import { faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Sign } from "crypto";
 import React from "react";
 import ReactDOM from "react-dom";
 import { CloseButton } from "../Buttons/CloseButton";
@@ -47,7 +44,7 @@ export const AddMangaModal: React.FC<AddMangaModalProps> = ({ addManga, open, ch
         {!loading && (
           <>
             <button
-              className={"button-31"}
+              className={"buttonBasic"}
               style={{ marginTop: "5px" }}
               onClick={addManga}
             >

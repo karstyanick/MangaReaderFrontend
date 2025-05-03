@@ -45,7 +45,7 @@ export const ChaptersList: React.FC<ChaptersListProps> = ({ currentManga, mangaC
               <button
                 ref={ref}
                 style={{ backgroundColor: color, cursor: "pointer" }}
-                className="button-31"
+                className="buttonBasic"
                 key={chapter}
                 onClick={() => getChapter(currentManga, chapter)}
               >
@@ -68,7 +68,7 @@ export const ChaptersList: React.FC<ChaptersListProps> = ({ currentManga, mangaC
           {!loading && (
             <>
               <button
-                className="button-31"
+                className="buttonBasic"
                 style={{ cursor: "pointer" }}
                 key={"addChapters"}
                 onClick={() => addChapters()}
@@ -92,7 +92,7 @@ export const ChaptersList: React.FC<ChaptersListProps> = ({ currentManga, mangaC
                   <button
                     ref={ref}
                     style={{ backgroundColor: color, cursor: "pointer" }}
-                    className="button-31"
+                    className="buttonBasic"
                     key={chapter}
                     onClick={() => getChapter(currentManga, chapter)}
                   >
@@ -115,7 +115,7 @@ export const ChaptersList: React.FC<ChaptersListProps> = ({ currentManga, mangaC
               {!loading && (
                 <>
                   <button
-                    className="button-31"
+                    className="buttonBasic"
                     style={{ cursor: "pointer" }}
                     key={"addChapters"}
                     onClick={() => addChapters()}

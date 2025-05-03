@@ -3,7 +3,6 @@ import {
   faArrowsLeftRight,
   faArrowsUpDown,
   faRightFromBracket,
-  faMagnifyingGlassPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
@@ -11,12 +10,11 @@ import React from "react";
 interface TopBarProps {
   scrollDirection: "horizontal" | "vertical"
   currentUser: string
-  visibleLogout: boolean,
   handleScrollDirectionChange: () => void;
   logout: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ scrollDirection, currentUser, visibleLogout, handleScrollDirectionChange, logout }) => {
+export const TopBar: React.FC<TopBarProps> = ({ scrollDirection, currentUser, handleScrollDirectionChange, logout }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -48,14 +46,12 @@ export const TopBar: React.FC<TopBarProps> = ({ scrollDirection, currentUser, vi
         <span style={{ fontSize: "30px", color: "white" }}>
           {currentUser}
         </span>
-        {visibleLogout && (
-          <button
-            className="topBarButton logoutButton"
-            onClick={() => logout()}
-          >
-            <FontAwesomeIcon icon={faRightFromBracket} />
-          </button>
-        )}
+        <button
+          className="topBarButton logoutButton"
+          onClick={() => logout()}
+        >
+          <FontAwesomeIcon icon={faRightFromBracket} />
+        </button>
       </div>
     </div>)
 }

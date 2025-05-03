@@ -15,11 +15,6 @@
   overflow-x: hidden;
 }
 
-.horizontal {
-  overflow-x: hidden;
-  overflow-y: hidden;
-}
-
 @media (max-width: 828px) {
   .image-gallery {
     width: 100%

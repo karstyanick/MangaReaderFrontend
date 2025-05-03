@@ -4,12 +4,11 @@ import "./image-gallery.css";
 // import Swiper styles
 import Swiper from "swiper";
 import 'swiper/css';
-import { Keyboard, Zoom } from "swiper/modules";
+import { EffectCoverflow, EffectFade, Keyboard, Pagination, Zoom } from "swiper/modules";
 
 export interface ImageGalleryProps {
   images: { original: string }[]
   scrollDirection: "horizontal" | "vertical"
-  onClick: () => void
   updatePageOrOffset: (index: number) => void
   startingIndex: number
   checkFirstOrLastPage: (index: number | undefined, offset: number | undefined, fullHeight: number | undefined) => void
@@ -158,7 +157,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     };
   }, [images]);
 
-  const handleZoom = (swiper: Swiper, _: number, imageElement: HTMLImageElement) => {
+  const handleZoom = (swiper: Swiper, scale: number, imageElement: HTMLImageElement) => {
+    if (scale > 1.000000000001) return;
+
     if (!zoomed) {
       imageElement.style.maxWidth = "none";
       imageElement.style.height = "calc(100vh - 80px)";
@@ -182,16 +183,18 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
   }, [fillScreen])
 
+
   return (
     <div
       ref={wrapperRef}
       className={`image-gallery ${scrollDirection}`}
+      onClick={() => navigator.wakeLock.request()}
     >
       {scrollDirection === "horizontal" ? (
         <SwiperComponent
           dir={"rtl"}
-          modules={[Keyboard, Zoom]}
-          zoom={{ maxRatio: 1.0000001 }}
+          modules={[Keyboard, Zoom, Pagination]}
+          zoom={{ maxRatio: 1.000000000001 }}
           initialSlide={startingIndex || 0}
           keyboard={{ enabled: true }}
           longSwipes={false}
@@ -200,6 +203,20 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           centeredSlides={true}
           autoHeight={true}
           onZoomChange={handleZoom}
+          pagination={{
+            type: "fraction",
+            currentClass: "pageNumbersCurrent",
+            totalClass: "pageNumbersTotal",
+            hiddenClass: "paginationHidden",
+            horizontalClass: "pagination",
+            hideOnClick: true,
+            renderFraction:
+              function(currentClass: string, totalClass: string) {
+                return '<span class="' + currentClass + '"></span>' +
+                  '<span style="color: white; font-size: 20px"> / </span>' +
+                  '<span class="' + totalClass + '"></span>'
+              }
+          }}
         >
           {images.map((image: { original: string }, index: number) => (
             <SwiperSlide
@@ -232,7 +249,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
             alt={""}
           />
         ))
-      )}
+      )
+      }
     </div >
   );
 };
