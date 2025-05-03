@@ -1,6 +1,7 @@
 
 import { useCombobox } from 'downshift';
 import React from 'react';
+import { decodeHtml } from '../Utils/String.utils';
 
 export interface AvailableManga {
   id: string,
@@ -24,7 +25,7 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ items, onSelect }) =
     inputValue
   } = useCombobox<AvailableManga>({
     items: inputItems,
-    itemToString: item => item?.label ?? '',
+    itemToString: item => decodeHtml(item?.label || "") ?? '',
     onInputValueChange: ({ inputValue }) => {
       setInputItems(
         items.filter(i =>
@@ -70,7 +71,7 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ items, onSelect }) =
                 padding: '4px 8px', cursor: 'pointer',
               }}
             >
-              {item.label}
+              {decodeHtml(item.label)}
             </li>
           ))}
       </ul>

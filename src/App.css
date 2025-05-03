@@ -76,6 +76,20 @@
   left:0%;
 }
 
+.deleteButton {
+  height: 30px;
+  width: 45px;
+  margin-top: 10px;
+  margin-left: -45px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  color: cornflowerBlue;
+}
+
 .modalWrapper {
   position: fixed;
   top: 0;

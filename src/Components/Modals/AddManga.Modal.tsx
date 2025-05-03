@@ -1,6 +1,8 @@
-import React from "react";
+import React, { Ref } from "react";
 import ReactDOM from "react-dom";
+import { Autocomplete, AvailableManga } from "../Autocomplete";
 import { CloseButton } from "../Buttons/CloseButton";
+import { MangaCard } from "../Posters";
 
 export const MODAL_STYLES_1: React.CSSProperties = {
   position: "fixed",
@@ -15,12 +17,14 @@ export const MODAL_STYLES_1: React.CSSProperties = {
 export interface AddMangaModalProps {
   addManga: () => void,
   open: boolean,
-  children: any,
   onClose: () => void,
   loading: boolean
+  setSearchTerm: (searchTerm: string) => void;
+  availableMangas: AvailableManga[];
+  addMangaChaptersRef: Ref<HTMLInputElement>;
 }
 
-export const AddMangaModal: React.FC<AddMangaModalProps> = ({ addManga, open, children, onClose, loading }) => {
+export const AddMangaModal: React.FC<AddMangaModalProps> = ({ addManga, open, onClose, loading, setSearchTerm, availableMangas, addMangaChaptersRef }) => {
   if (!open) return null;
 
   return ReactDOM.createPortal(
@@ -28,7 +32,16 @@ export const AddMangaModal: React.FC<AddMangaModalProps> = ({ addManga, open, ch
       <div className="modalWrapper" />
       <CloseButton onClose={onClose} />
       <div style={MODAL_STYLES_1}>
-        {children}
+        <Autocomplete
+          items={availableMangas}
+          onSelect={(item) => {
+            setSearchTerm(item?.label || "");
+          }}
+        ></Autocomplete>
+        <input
+          ref={addMangaChaptersRef}
+          placeholder={"Chapters (a-b, Latest, First)"}
+        ></input>
         {loading && (
           <>
             <div className="loadingBox">

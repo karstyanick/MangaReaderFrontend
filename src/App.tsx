@@ -487,18 +487,10 @@ function App() {
           open={isOpenAddManga}
           onClose={() => setOpenAddManga(false)}
           loading={loading}
-        >
-          <Autocomplete
-            items={availableMangas}
-            onSelect={(item) => {
-              setSearchTerm(item?.label || "");
-            }}
-          ></Autocomplete>
-          <input
-            ref={addMangaChaptersRef}
-            placeholder={"Chapters (a-b, Latest, First)"}
-          ></input>
-        </AddMangaModal>
+          setSearchTerm={setSearchTerm}
+          availableMangas={availableMangas}
+          addMangaChaptersRef={addMangaChaptersRef}
+        />
         <ReadMangaModal
           open={isOpenReadManga}
           onClose={() => onCloseModal()}

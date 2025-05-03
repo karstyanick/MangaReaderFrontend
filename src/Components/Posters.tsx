@@ -4,7 +4,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useRef, useState } from "react";
-import { useLongPress } from "use-long-press";
+import { LongPressCallback, useLongPress } from "use-long-press";
+import { ConfirmButton } from "./Buttons/ConfirmButton";
 
 export interface MangaCard {
   id: string,
@@ -27,8 +28,10 @@ const imgStyles = {
 
 export const Posters: React.FC<PostersProps> = ({ mangas, openReadManga, deleteManga }) => {
   const [longpressed, setLongPressed] = useState(false);
+  const justLongPressed = useRef(false);
 
-  const callback = React.useCallback(() => {
+  const callback = React.useCallback((event: any) => {
+    justLongPressed.current = true;
     setLongPressed(!longpressed);
   }, [longpressed]);
 
@@ -43,29 +46,30 @@ export const Posters: React.FC<PostersProps> = ({ mangas, openReadManga, deleteM
         <div style={{ display: "flex" }}>
           <img
             style={imgStyles}
-            onClick={() => openReadManga(manga.label)}
+            onClick={() => {
+              if (justLongPressed.current) {
+                justLongPressed.current = false;
+                return;
+              }
+              openReadManga(manga.label)
+            }}
             {...bind()}
             alt={""}
             key={manga.id}
             src={manga.poster}
           />
           {longpressed && manga !== mangas[mangas.length - 1] && (
-            <button
-              style={{
-                height: "30px",
-                width: "45px",
-                marginTop: "10px",
-                marginLeft: "-45px",
-                backgroundColor: "transparent",
-                border: "none",
-              }}
-              onClick={() => deleteManga(manga.label)}
+            <ConfirmButton
+              onConfirm={() => deleteManga(manga.label)}
+              buttonClassName="deleteButton"
+              message={`Delete ${manga.label}`}
             >
               <FontAwesomeIcon icon={faTrash} size="xl" />
-            </button>
+            </ConfirmButton>
           )}
         </div>
-      ))}
-    </div>
+      ))
+      }
+    </div >
   )
 }

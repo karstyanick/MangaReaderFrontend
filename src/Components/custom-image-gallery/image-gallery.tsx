@@ -4,7 +4,7 @@ import "./image-gallery.css";
 // import Swiper styles
 import Swiper from "swiper";
 import 'swiper/css';
-import { EffectCoverflow, EffectFade, Keyboard, Pagination, Zoom } from "swiper/modules";
+import { Keyboard, Pagination, Zoom } from "swiper/modules";
 
 export interface ImageGalleryProps {
   images: { original: string }[]
@@ -31,6 +31,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const checkFirstLastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [swiperComponent, setSwiperComponent] = useState<Swiper>(null);
   const [zoomed, setZoomed] = useState<boolean>(false);
+  let clickTimeout: NodeJS.Timeout | null = null;
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -183,6 +184,45 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
   }, [fillScreen])
 
+  const onSwiperInit = (swiper: Swiper) => {
+    setSwiperComponent(swiper);// Grab the pagination container element...
+
+    const paginationEl = swiper.pagination.el;
+    const hiddenClass = swiper.params.pagination.hiddenClass as string;
+    if (paginationEl && hiddenClass) {
+      paginationEl.classList.add(hiddenClass);
+    }
+
+    if (swiper.zoom) {
+      swiper.zoom.onGestureStart = () => { };
+      swiper.zoom.onGestureChange = () => { };
+      swiper.zoom.onGestureEnd = () => { };
+    }
+  }
+
+  const onClickHandler = (swiper: Swiper) => {
+    if (clickTimeout !== null) {
+      clearTimeout(clickTimeout);
+      clickTimeout = null;
+    } else {
+      clickTimeout = setTimeout(() => {
+        onSingleClick(swiper)
+        clickTimeout = null;
+      }, 200);
+    }
+  }
+
+  const onSingleClick = (swiper: Swiper) => {
+    const paginationEl: HTMLElement = swiper.pagination.el;
+    const hiddenClass = swiper.params.pagination.hiddenClass as string;
+    if (paginationEl && hiddenClass) {
+      if (paginationEl.classList.contains(hiddenClass)) {
+        paginationEl.classList.remove(hiddenClass)
+      } else {
+        paginationEl.classList.add(hiddenClass);
+      }
+    }
+  }
 
   return (
     <div
@@ -199,17 +239,17 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           keyboard={{ enabled: true }}
           longSwipes={false}
           onSlideChange={handleChangeIndex}
-          onSwiper={setSwiperComponent}
+          onSwiper={onSwiperInit}
           centeredSlides={true}
           autoHeight={true}
           onZoomChange={handleZoom}
+          onClick={onClickHandler}
           pagination={{
             type: "fraction",
             currentClass: "pageNumbersCurrent",
             totalClass: "pageNumbersTotal",
             hiddenClass: "paginationHidden",
             horizontalClass: "pagination",
-            hideOnClick: true,
             renderFraction:
               function(currentClass: string, totalClass: string) {
                 return '<span class="' + currentClass + '"></span>' +

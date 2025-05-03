@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-
+import { decodeHtml } from "../Utils/String.utils";
 export interface ChapterNumber {
   [mangaName: string]: string
 };
@@ -23,11 +23,6 @@ export const ChaptersList: React.FC<ChaptersListProps> = ({ currentManga, mangaC
     if (!scrollRef?.current) return
     scrollRef.current.scrollIntoView({ block: "center" });
   }, [scrollRef, visible]);
-
-  function decodeHtml(html: string) {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.documentElement.textContent ?? "";
-  }
 
   return (
     <>
