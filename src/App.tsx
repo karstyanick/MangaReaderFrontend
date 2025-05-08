@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthForm } from "./Components/AuthForm";
-import { Autocomplete, AvailableManga } from "./Components/Autocomplete";
+import { AvailableManga } from "./Components/Autocomplete";
 import { ChapterNumber, ChaptersList } from "./Components/ChaptersList";
 import CustomImageGallery from "./Components/custom-image-gallery/image-gallery";
 import { AddMangaModal } from "./Components/Modals/AddManga.Modal";
@@ -18,7 +18,7 @@ import { TopBar } from "./Components/TopBar";
 import plusManga from "./plusmanga.png";
 axios.defaults.withCredentials = true;
 
-//let BACKENDHOST = "https://reallyfluffy.dev/api";
+// let BACKENDHOST = "https://reallyfluffy.dev/api";
 let BACKENDHOST = "http://localhost:5000"
 
 const navChaptersRight: React.CSSProperties = {
@@ -58,8 +58,6 @@ export interface CurrentPage {
 };
 
 function App() {
-  let clickTimeout: NodeJS.Timeout | null = null;
-  let clickTimeout2: NodeJS.Timeout | null = null;
 
   const addMangaChaptersRef = useRef<HTMLInputElement | null>(null);
 
@@ -68,7 +66,6 @@ function App() {
 
   const pagePreviousRef = useRef({});
   const scrollPreviousRef = useRef({});
-  const firstPageLoadRef = useRef(true);
 
   const [chapter, setChapter] = useState<MangaChapters>({});
   const [chapterNumber, setCurrentChapterNumber] = useState<ChapterNumber>({});
@@ -81,25 +78,27 @@ function App() {
   const [visible, setVisible] = useState(false);
   const [lastPage, setlastPage] = useState(false);
   const [firstPage, setFirstPage] = useState(false);
-  const [showIndex, toggleShowIndex] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [availableMangas, setAvailableMangas] = useState<AvailableManga[]>([]);
-  const [fullScreen, setFullScreen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fillScreen, setFillScreen] = useState(false);
   const [currentlyFetching, setCurrentlyFetching] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<"horizontal" | "vertical">("horizontal");
   const [authenticated, setAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    initPage();
     saveState(chapter, currentManga, currentPage);
   }, [
     currentPage,
     chapter,
     currentManga,
   ]);
+
+  useEffect(() => {
+    initPage();
+  }, []);
 
   const axiosInstance = axios.create({
     baseURL: BACKENDHOST,
@@ -156,7 +155,6 @@ function App() {
         password: password,
       })
       .then(async (response) => {
-        firstPageLoadRef.current = true;
         saveToken(response.data.token);
         initPage();
         setCurrentUser(response.data.username);
@@ -188,7 +186,6 @@ function App() {
           return;
         }
         saveToken(response.data.token);
-        firstPageLoadRef.current = true;
         initPage();
         setCurrentUser(response.data.username);
       });
@@ -197,57 +194,53 @@ function App() {
   async function logout() {
     return axiosInstance.post(`/logout`, {}).then(() => {
       localStorage.removeItem("jwt");
-      firstPageLoadRef.current = true;
       setCurrentUser("");
       initPage();
     });
   }
 
   async function initPage() {
-    if (firstPageLoadRef.current === true) {
-      firstPageLoadRef.current = false;
-      return axiosInstance
-        .get(`/`, {})
-        .then((response) => {
-          addManga([
-            ...response.data.posters,
-            { id: "addManga", label: "addManga", poster: plusManga },
-          ]);
-          if (response.data.state.currentChapter) {
-            setChapter(response.data.state.currentChapter);
-            setCurrentChapterNumber(response.data.state.currentChapterNumber);
-          }
-          if (response.data.state.currentPage) {
-            setCurrentPage(response.data.state.currentPage);
-            pagePreviousRef.current = response.data.state.currentPage;
-          }
-          if (response.data.state.currentScrollOffset) {
-            scrollPreviousRef.current = response.data.state.currentScrollOffset;
-          }
-          setCurrentUser(response.data.username);
-          setAuthenticated(true)
-          setAvailableMangas(response.data.availableMangas);
-          setScrollDirection(response.data.scrollPreference);
-        })
-        .catch((error) => {
-          if (
-            error.message === "Expired token" ||
-            error.message === "Forbidden error. Token could not be verified"
-          ) {
-            localStorage.removeItem("jwt");
-          }
+    return axiosInstance
+      .get(`/`, {})
+      .then((response) => {
+        addManga([
+          ...response.data.posters,
+          { id: "addManga", label: "addManga", poster: plusManga },
+        ]);
+        if (response.data.state.currentChapter) {
+          setChapter(response.data.state.currentChapter);
+          setCurrentChapterNumber(response.data.state.currentChapterNumber);
+        }
+        if (response.data.state.currentPage) {
+          setCurrentPage(response.data.state.currentPage);
+          pagePreviousRef.current = response.data.state.currentPage;
+        }
+        if (response.data.state.currentScrollOffset) {
+          scrollPreviousRef.current = response.data.state.currentScrollOffset;
+        }
+        setCurrentUser(response.data.username);
+        setAuthenticated(true)
+        setAvailableMangas(response.data.availableMangas);
+        setScrollDirection(response.data.scrollPreference);
+      })
+      .catch((error) => {
+        if (
+          error.message === "Expired token" ||
+          error.message === "Forbidden error. Token could not be verified"
+        ) {
+          localStorage.removeItem("jwt");
+        }
 
-          setChapter({});
-          setCurrentChapterNumber({});
-          addManga([]);
-          setMangaChapterList([]);
-          setCurrentManga("");
-          setCurrentPage({});
-          setlastPage(false);
-          toggleShowIndex(false);
-          setAuthenticated(false);
-        });
-    }
+        setChapter({});
+        setCurrentChapterNumber({});
+        addManga([]);
+        setMangaChapterList([]);
+        setCurrentManga("");
+        setCurrentPage({});
+        setlastPage(false);
+        setAuthenticated(false);
+      })
+      .finally(() => setAuthLoading(false));
   }
 
   async function addNewManga() {
@@ -294,7 +287,6 @@ function App() {
         toast("Manga added", { type: "success" });
 
         setLoading(false);
-        firstPageLoadRef.current = true;
         initPage();
         setOpenAddManga(false);
       });
@@ -348,7 +340,6 @@ function App() {
         name: mangaName,
       })
       .then(() => {
-        firstPageLoadRef.current = true;
         initPage();
       });
   }
@@ -463,7 +454,7 @@ function App() {
   };
 
   return <>
-    {!authenticated &&
+    {!authenticated && !authLoading &&
       < AuthForm
         signup={signup}
         signin={signin}
