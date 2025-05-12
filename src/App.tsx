@@ -18,8 +18,8 @@ import { TopBar } from "./Components/TopBar";
 import plusManga from "./plusmanga.png";
 axios.defaults.withCredentials = true;
 
-// let BACKENDHOST = "https://reallyfluffy.dev/api";
-let BACKENDHOST = "http://localhost:5000"
+let BACKENDHOST = "https://reallyfluffy.dev/api";
+//let BACKENDHOST = "http://localhost:5000"
 
 const navChaptersRight: React.CSSProperties = {
   height: "40px",
