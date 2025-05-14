@@ -32,6 +32,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const [swiperComponent, setSwiperComponent] = useState<Swiper>(null);
   const [zoomed, setZoomed] = useState<boolean>(false);
   let clickTimeout: NodeJS.Timeout | null = null;
+  let lastPageSlideStartX: number | null = null;
+  let lastPageSlideCurrentX: number | null = null;
+  let nextButtenRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -67,6 +70,19 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
         clearTimeout(saveTimeoutRef.current as NodeJS.Timeout);
         saveTimeoutRef.current = null;
       }, 2000);
+    }
+
+    if (swiper.realIndex === images.length - 1) {
+      // if (!swiper.slides?.[swiper.realIndex]) return
+      // const slidesElement: HTMLDivElement = swiper.slides[swiper.realIndex]
+      // const imageElement: HTMLImageElement = swiper.slides[swiper.realIndex].querySelector('img')
+      // console.log("HELLLOOOOO1")
+      // if (!nextButtenRef.current) return
+      // console.log("HELLLOOOOO2")
+      // console.log(`${slidesElement.style.width.replace("px", "")}`);
+      // console.log(`${imageElement.style.width.replace("px", "")}`);
+      // console.log(`${(parseInt(slidesElement.style.width.replace("px", "")) - parseInt(imageElement.style.width.replace("px", ""))) / 2}`);
+      // nextButtenRef.current.style.left = `${(parseInt(slidesElement.style.width.replace("px", "")) - parseInt(imageElement.style.width.replace("px", ""))) / 2} `
     }
 
     checkFirstOrLastPage(swiper.realIndex, undefined, undefined);
@@ -224,10 +240,36 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
   }
 
+  const onSliderMove = (swiper: Swiper, event: TouchEvent) => {
+    if (swiper.realIndex === images.length - 1) {
+      console.log(`Moved ${event.changedTouches[0].screenX - (lastPageSlideStartX || 0)} px`);
+    }
+  }
+
+  const onSliderStartMove = (swiper: Swiper, event: TouchEvent) => {
+    if (swiper.realIndex === images.length - 1) {
+      if (lastPageSlideStartX === null) {
+        lastPageSlideStartX = event.changedTouches[0].screenX
+      }
+      console.log("-------FIRST--------")
+      console.dir(event)
+      console.log("-------FIRST--------")
+    }
+  }
+
+  const onSliderStopMove = (swiper: Swiper, event: TouchEvent) => {
+    if (swiper.realIndex === images.length - 1) {
+      lastPageSlideStartX = null;
+      console.log("-------LAST--------")
+      console.dir(event)
+      console.log("-------LAST--------")
+    }
+  }
+
   return (
     <div
       ref={wrapperRef}
-      className={`image-gallery ${scrollDirection}`}
+      className={`image - gallery ${scrollDirection} `}
       onClick={() => navigator.wakeLock.request()}
     >
       {scrollDirection === "horizontal" ? (
@@ -244,6 +286,10 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           autoHeight={true}
           onZoomChange={handleZoom}
           onClick={onClickHandler}
+          // onSlideResetTransitionEnd={() => console.log("fired")}
+          onSliderMove={onSliderMove}
+          onSliderFirstMove={onSliderStartMove}
+          onTouchEnd={onSliderStopMove}
           pagination={{
             type: "fraction",
             currentClass: "pageNumbersCurrent",
@@ -273,6 +319,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                   src={image.original}
                   alt={""}
                 />
+                <button ref={nextButtenRef} style={{ position: "absolute", left: 0 }}>Test</button>
               </div>
             </SwiperSlide>
           ))}
