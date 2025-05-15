@@ -85,8 +85,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const adjustNavButtonStyles = (swiper: Swiper) => {
     const slidesElement: HTMLDivElement = swiper.slides[swiper.realIndex]
     const imageElement: HTMLImageElement = swiper.slides[swiper.realIndex].querySelector('img')
-    // const offset = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`;
-    // const height = `${imageElement.height}px`;
 
     if (swiper.realIndex === images.length - 1) {
       if (!imageElement.width) {
@@ -233,11 +231,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       paginationEl.classList.add(hiddenClass);
     }
 
-    if (swiper.zoom) {
-      swiper.zoom.onGestureStart = () => { };
-      swiper.zoom.onGestureChange = () => { };
-      swiper.zoom.onGestureEnd = () => { };
-    }
+    adjustNavButtonStyles(swiper);
   }
 
   const onClickHandler = (swiper: Swiper) => {
@@ -269,13 +263,18 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
     if (nextButtenRef?.current && swiper.realIndex === images.length - 1 && positionX) {
       const swipeDistanceNormalized = Math.min(Math.max(positionX - (lastPageSlideStartX || 0), 0), 400) / 500;
-      nextButtenRef.current.style.background = `rgba(0,0,0,${swipeDistanceNormalized})`;
+      const currentOpacity = nextButtenRef.current?.style?.backgroundColor ? parseFloat(nextButtenRef.current.style.backgroundColor.split("0, 0, 0, ")[1].replace(")", "")) : 0;
+      nextButtenRef.current.style.backgroundColor = `rgba(0,0,0,${Math.max(swipeDistanceNormalized, currentOpacity)})`;
     }
     if (prevButtonRef?.current && swiper.realIndex === 0 && positionX) {
       const swipeDistanceNormalized = Math.min(Math.abs(Math.min(positionX - (firstPageSlideStartX || 0), 0)), 400) / 500;
-      prevButtonRef.current.style.background = `rgba(0,0,0,${swipeDistanceNormalized})`;
+      const currentOpacity = prevButtonRef.current?.style?.backgroundColor ? parseFloat(prevButtonRef.current.style.backgroundColor.split("0, 0, 0, ")[1].replace(")", "")) : 0;
+      prevButtonRef.current.style.backgroundColor = `rgba(0,0,0,${Math.max(swipeDistanceNormalized, currentOpacity)})`;
     }
   }
+
+  let hideNextButtonTimeout: NodeJS.Timeout | null = null;
+  let hidePrevButtonTimeout: NodeJS.Timeout | null = null;
 
   const onSliderStartMove = (swiper: Swiper, event: TouchEvent | PointerEvent) => {
     const positionX = (event as TouchEvent).changedTouches?.[0]?.screenX || (event as PointerEvent).screenX;
@@ -285,30 +284,40 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
         lastPageSlideStartX = positionX
         nextButtenRef.current.style.visibility = "visible";
       }
+      clearTimeout(hideNextButtonTimeout as NodeJS.Timeout);
+      hideNextButtonTimeout = null;
     }
     if (prevButtonRef?.current && swiper.realIndex === 0 && positionX) {
       if (firstPageSlideStartX === null) {
         firstPageSlideStartX = positionX
         prevButtonRef.current.style.visibility = "visible";
       }
+      clearTimeout(hidePrevButtonTimeout as NodeJS.Timeout);
+      hidePrevButtonTimeout = null;
     }
   }
 
   const onSliderStopMove = (swiper: Swiper) => {
     if (swiper.realIndex === images.length - 1) {
+      if (hideNextButtonTimeout) return;
       lastPageSlideStartX = null;
-      setTimeout(() => {
+      hideNextButtonTimeout = setTimeout(() => {
         if (!nextButtenRef?.current) return;
-        nextButtenRef.current.style.background = `rgba(0,0,0,0)`
+        nextButtenRef.current.style.backgroundColor = `rgba(0,0,0,0)`
         nextButtenRef.current.style.visibility = "hidden";
+        clearTimeout(hideNextButtonTimeout as NodeJS.Timeout);
+        hideNextButtonTimeout = null;
       }, 3000)
     }
     if (prevButtonRef?.current && swiper.realIndex === 0) {
+      if (hidePrevButtonTimeout) return;
       firstPageSlideStartX = null;
-      setTimeout(() => {
+      hidePrevButtonTimeout = setTimeout(() => {
         if (!prevButtonRef?.current) return;
-        prevButtonRef.current.style.background = `rgba(0,0,0,0)`
+        prevButtonRef.current.style.backgroundColor = `rgba(0,0,0,0)`
         prevButtonRef.current.style.visibility = "hidden";
+        clearTimeout(hidePrevButtonTimeout as NodeJS.Timeout);
+        hidePrevButtonTimeout = null;
       }, 3000)
     }
   }
@@ -336,7 +345,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           onSliderMove={onSliderMove}
           onSliderFirstMove={onSliderStartMove}
           onTouchEnd={onSliderStopMove}
-          onTouchStart={() => console.log("Test")}
           pagination={{
             type: "fraction",
             currentClass: "pageNumbersCurrent",
