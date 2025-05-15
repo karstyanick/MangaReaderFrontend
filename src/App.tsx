@@ -1,8 +1,3 @@
-import {
-  faArrowLeft,
-  faArrowRight
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
@@ -20,32 +15,6 @@ axios.defaults.withCredentials = true;
 
 let BACKENDHOST = "https://reallyfluffy.dev/api";
 //let BACKENDHOST = "http://localhost:5000"
-
-const navChaptersRight: React.CSSProperties = {
-  height: "40px",
-  width: "40px",
-  display: "flex",
-  justifyContent: "center",
-  top: "50%",
-  transform: "translate(0, -50%)",
-  zIndex: "1200",
-  position: "absolute",
-  right: 0,
-  cursor: "pointer",
-};
-
-const navChaptersLeft: React.CSSProperties = {
-  height: "40px",
-  width: "40px",
-  display: "flex",
-  justifyContent: "center",
-  top: "50%",
-  transform: "translate(0, -50%)",
-  zIndex: "1200",
-  position: "absolute",
-  left: 0,
-  cursor: "pointer",
-};
 
 export interface MangaChapters {
   [mangaName: string]: {
@@ -77,7 +46,6 @@ function App() {
   const [isOpenReadManga, setOpenReadManga] = useState(false);
   const [visible, setVisible] = useState(false);
   const [lastPage, setlastPage] = useState(false);
-  const [firstPage, setFirstPage] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [availableMangas, setAvailableMangas] = useState<AvailableManga[]>([]);
@@ -120,6 +88,7 @@ function App() {
     if (
       JSON.stringify(currentPage) !== JSON.stringify(pagePreviousRef.current) || force
     ) {
+      console.trace(`Saving from here`);
       axiosInstance.post(`/save`, {
         name: currentManga,
         chapterNumber: passNewChapterNumber || chapterNumber,
@@ -411,34 +380,6 @@ function App() {
     }
   }
 
-  function checkFirstOrLastPage(index: number | undefined, offset: number | undefined, fullHeight: number | undefined) {
-    if (index !== undefined) {
-      if (index === chapter[currentManga].length - 1) {
-        setlastPage(true);
-        setFirstPage(false);
-      } else if (index === 0) {
-        setFirstPage(true);
-        setlastPage(false);
-      } else {
-        setlastPage(false);
-        setFirstPage(false);
-      }
-    }
-
-    if (offset !== undefined) {
-      if (offset === fullHeight) {
-        setlastPage(true);
-        setFirstPage(false);
-      } else if (offset === 0) {
-        setFirstPage(true);
-        setlastPage(false);
-      } else {
-        setlastPage(false);
-        setFirstPage(false);
-      }
-    }
-  }
-
   function updatePageOrOffset(page: number) {
     setCurrentPage({ ...currentPage, [currentManga]: page });
   }
@@ -491,30 +432,6 @@ function App() {
           showZoomed={isOpenReadManga && fillScreen}
           onZoomClicked={() => { setFillScreen(false) }}
         >
-          {firstPage && (
-            <>
-              <button
-                className="buttonBasic"
-                style={navChaptersRight}
-                onClick={() =>
-                  getChapter(
-                    currentManga,
-                    `${parseInt(chapterNumber[currentManga]) - 1}`
-                  )
-                }
-              >
-                <FontAwesomeIcon
-                  icon={faArrowRight}
-                  style={{
-                    left: "50%",
-                    top: "50%",
-                    position: "absolute",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                />
-              </button>
-            </>
-          )}
           <ChaptersList
             currentManga={currentManga}
             mangaChapterList={mangaChapterList}
@@ -531,35 +448,10 @@ function App() {
             fillScreen={fillScreen}
             images={chapter[currentManga]}
             scrollDirection={scrollDirection}
-            checkFirstOrLastPage={checkFirstOrLastPage}
             onFillScreen={setFillScreen}
+            getNextChapter={() => getChapter(currentManga, `${parseInt(chapterNumber[currentManga]) + 1}`)}
+            getPrevChapter={() => getChapter(currentManga, `${parseInt(chapterNumber[currentManga]) - 1}`)}
           ></CustomImageGallery>
-
-          {lastPage && (
-            <>
-              <button
-                className="buttonBasic"
-                style={navChaptersLeft}
-                onClick={() =>
-                  getChapter(
-                    currentManga,
-                    `${parseInt(chapterNumber[currentManga]) + 1}`
-                  )
-                }
-              >
-                <FontAwesomeIcon
-                  icon={faArrowLeft}
-                  style={{
-                    left: "50%",
-                    top: "50%",
-                    position: "absolute",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                />
-              </button>
-            </>
-          )}
-
         </ReadMangaModal>
       </>
     )}

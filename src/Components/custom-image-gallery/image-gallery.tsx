@@ -1,19 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Swiper as SwiperComponent, SwiperSlide } from 'swiper/react';
 import "./image-gallery.css";
-// import Swiper styles
 import Swiper from "swiper";
 import 'swiper/css';
 import { Keyboard, Pagination, Zoom } from "swiper/modules";
+import {
+  faArrowLeft,
+  faArrowRight
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export interface ImageGalleryProps {
   images: { original: string }[]
   scrollDirection: "horizontal" | "vertical"
   updatePageOrOffset: (index: number) => void
   startingIndex: number
-  checkFirstOrLastPage: (index: number | undefined, offset: number | undefined, fullHeight: number | undefined) => void
   onFillScreen: (isFilled: boolean) => void;
   fillScreen: boolean
+  getNextChapter: () => void;
+  getPrevChapter: () => void;
 }
 
 const ImageGallery: React.FC<ImageGalleryProps> = ({
@@ -22,8 +27,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   fillScreen,
   updatePageOrOffset,
   startingIndex,
-  checkFirstOrLastPage,
   onFillScreen,
+  getPrevChapter,
+  getNextChapter
 }) => {
   const imageRefs = useRef<HTMLImageElement[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -33,8 +39,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const [zoomed, setZoomed] = useState<boolean>(false);
   let clickTimeout: NodeJS.Timeout | null = null;
   let lastPageSlideStartX: number | null = null;
-  let lastPageSlideCurrentX: number | null = null;
+  let firstPageSlideStartX: number | null = null;
   let nextButtenRef = useRef<HTMLButtonElement>(null);
+  let prevButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -72,21 +79,43 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       }, 2000);
     }
 
+    adjustNavButtonStyles(swiper);
+  };
+
+  const adjustNavButtonStyles = (swiper: Swiper) => {
+    const slidesElement: HTMLDivElement = swiper.slides[swiper.realIndex]
+    const imageElement: HTMLImageElement = swiper.slides[swiper.realIndex].querySelector('img')
+    // const offset = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`;
+    // const height = `${imageElement.height}px`;
+
     if (swiper.realIndex === images.length - 1) {
-      // if (!swiper.slides?.[swiper.realIndex]) return
-      // const slidesElement: HTMLDivElement = swiper.slides[swiper.realIndex]
-      // const imageElement: HTMLImageElement = swiper.slides[swiper.realIndex].querySelector('img')
-      // console.log("HELLLOOOOO1")
-      // if (!nextButtenRef.current) return
-      // console.log("HELLLOOOOO2")
-      // console.log(`${slidesElement.style.width.replace("px", "")}`);
-      // console.log(`${imageElement.style.width.replace("px", "")}`);
-      // console.log(`${(parseInt(slidesElement.style.width.replace("px", "")) - parseInt(imageElement.style.width.replace("px", ""))) / 2}`);
-      // nextButtenRef.current.style.left = `${(parseInt(slidesElement.style.width.replace("px", "")) - parseInt(imageElement.style.width.replace("px", ""))) / 2} `
+      if (!imageElement.width) {
+        imageElement.onload = () => {
+          if (!nextButtenRef.current) return
+          nextButtenRef.current.style.left = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
+          nextButtenRef.current.style.height = `${imageElement.height}px`;
+        }
+      } else {
+        if (!nextButtenRef.current) return
+        nextButtenRef.current.style.left = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
+        nextButtenRef.current.style.height = `${imageElement.height}px`;
+      }
     }
 
-    checkFirstOrLastPage(swiper.realIndex, undefined, undefined);
-  };
+    if (swiper.realIndex === 0) {
+      if (!imageElement.width) {
+        imageElement.onload = () => {
+          if (!prevButtonRef.current) return
+          prevButtonRef.current.style.right = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
+          prevButtonRef.current.style.height = `${imageElement.height}px`;
+        }
+      } else {
+        if (!prevButtonRef.current) return
+        prevButtonRef.current.style.right = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
+        prevButtonRef.current.style.height = `${imageElement.height}px`;
+      }
+    }
+  }
 
   const handleScroll = () => {
     if (scrollDirection === "horizontal") {
@@ -107,11 +136,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       checkFirstLastTimeoutRef.current = setTimeout(() => {
         if (!wrapperRef?.current) return
         const scrollTop = Math.ceil(wrapperRef.current.scrollTop);
-        checkFirstOrLastPage(
-          undefined,
-          scrollTop,
-          wrapperRef.current.scrollHeight - wrapperRef.current.offsetHeight
-        );
         clearTimeout(checkFirstLastTimeoutRef.current as NodeJS.Timeout);
         checkFirstLastTimeoutRef.current = null;
       }, 200);
@@ -240,36 +264,59 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
   }
 
-  const onSliderMove = (swiper: Swiper, event: TouchEvent) => {
-    if (swiper.realIndex === images.length - 1) {
-      console.log(`Moved ${event.changedTouches[0].screenX - (lastPageSlideStartX || 0)} px`);
+  const onSliderMove = (swiper: Swiper, event: TouchEvent | PointerEvent) => {
+    const positionX = (event as TouchEvent).changedTouches?.[0]?.screenX || (event as PointerEvent).screenX;
+
+    if (nextButtenRef?.current && swiper.realIndex === images.length - 1 && positionX) {
+      const swipeDistanceNormalized = Math.min(Math.max(positionX - (lastPageSlideStartX || 0), 0), 400) / 500;
+      nextButtenRef.current.style.background = `rgba(0,0,0,${swipeDistanceNormalized})`;
+    }
+    if (prevButtonRef?.current && swiper.realIndex === 0 && positionX) {
+      const swipeDistanceNormalized = Math.min(Math.abs(Math.min(positionX - (firstPageSlideStartX || 0), 0)), 400) / 500;
+      prevButtonRef.current.style.background = `rgba(0,0,0,${swipeDistanceNormalized})`;
     }
   }
 
-  const onSliderStartMove = (swiper: Swiper, event: TouchEvent) => {
-    if (swiper.realIndex === images.length - 1) {
+  const onSliderStartMove = (swiper: Swiper, event: TouchEvent | PointerEvent) => {
+    const positionX = (event as TouchEvent).changedTouches?.[0]?.screenX || (event as PointerEvent).screenX;
+
+    if (nextButtenRef?.current && swiper.realIndex === images.length - 1 && positionX) {
       if (lastPageSlideStartX === null) {
-        lastPageSlideStartX = event.changedTouches[0].screenX
+        lastPageSlideStartX = positionX
+        nextButtenRef.current.style.visibility = "visible";
       }
-      console.log("-------FIRST--------")
-      console.dir(event)
-      console.log("-------FIRST--------")
+    }
+    if (prevButtonRef?.current && swiper.realIndex === 0 && positionX) {
+      if (firstPageSlideStartX === null) {
+        firstPageSlideStartX = positionX
+        prevButtonRef.current.style.visibility = "visible";
+      }
     }
   }
 
-  const onSliderStopMove = (swiper: Swiper, event: TouchEvent) => {
+  const onSliderStopMove = (swiper: Swiper) => {
     if (swiper.realIndex === images.length - 1) {
       lastPageSlideStartX = null;
-      console.log("-------LAST--------")
-      console.dir(event)
-      console.log("-------LAST--------")
+      setTimeout(() => {
+        if (!nextButtenRef?.current) return;
+        nextButtenRef.current.style.background = `rgba(0,0,0,0)`
+        nextButtenRef.current.style.visibility = "hidden";
+      }, 3000)
+    }
+    if (prevButtonRef?.current && swiper.realIndex === 0) {
+      firstPageSlideStartX = null;
+      setTimeout(() => {
+        if (!prevButtonRef?.current) return;
+        prevButtonRef.current.style.background = `rgba(0,0,0,0)`
+        prevButtonRef.current.style.visibility = "hidden";
+      }, 3000)
     }
   }
 
   return (
     <div
       ref={wrapperRef}
-      className={`image - gallery ${scrollDirection} `}
+      className={`image-gallery ${scrollDirection} `}
       onClick={() => navigator.wakeLock.request()}
     >
       {scrollDirection === "horizontal" ? (
@@ -286,10 +333,10 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           autoHeight={true}
           onZoomChange={handleZoom}
           onClick={onClickHandler}
-          // onSlideResetTransitionEnd={() => console.log("fired")}
           onSliderMove={onSliderMove}
           onSliderFirstMove={onSliderStartMove}
           onTouchEnd={onSliderStopMove}
+          onTouchStart={() => console.log("Test")}
           pagination={{
             type: "fraction",
             currentClass: "pageNumbersCurrent",
@@ -319,7 +366,28 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                   src={image.original}
                   alt={""}
                 />
-                <button ref={nextButtenRef} style={{ position: "absolute", left: 0 }}>Test</button>
+                {index === images.length - 1 && <button ref={nextButtenRef} className="nextChapterButton" onClick={getNextChapter}>
+                  <FontAwesomeIcon
+                    icon={faArrowLeft}
+                    style={{
+                      left: "50%",
+                      top: "50%",
+                      position: "absolute",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                </button>}
+                {index === 0 && <button ref={prevButtonRef} className="nextChapterButton" onClick={getPrevChapter}>
+                  <FontAwesomeIcon
+                    icon={faArrowRight}
+                    style={{
+                      left: "50%",
+                      top: "50%",
+                      position: "absolute",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                </button>}
               </div>
             </SwiperSlide>
           ))}
