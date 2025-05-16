@@ -9,6 +9,7 @@ import {
   faArrowRight
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { start } from "repl";
 
 export interface ImageGalleryProps {
   images: { original: string }[]
@@ -232,6 +233,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
 
     adjustNavButtonStyles(swiper);
+    console.log(`Sliding to: ${startingIndex}`);
+    console.log(`SlidesPerViewDynamic: ${swiper.slidesPerViewDynamic()}`)
+
+    // setTimeout(() =>
+    //   swiper.slideTo(startingIndex, 1000, false), 5000);
   }
 
   const onClickHandler = (swiper: Swiper) => {
@@ -333,8 +339,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           dir={"rtl"}
           modules={[Keyboard, Zoom, Pagination]}
           zoom={{ maxRatio: 1.000000000001 }}
-          initialSlide={startingIndex || 0}
           keyboard={{ enabled: true }}
+          initialSlide={startingIndex}
           longSwipes={false}
           onSlideChange={handleChangeIndex}
           onSwiper={onSwiperInit}
@@ -345,6 +351,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           onSliderMove={onSliderMove}
           onSliderFirstMove={onSliderStartMove}
           onTouchEnd={onSliderStopMove}
+          slidesPerView={"auto"}
+          lazyPreloadPrevNext={2}
+          spaceBetween={10}
           pagination={{
             type: "fraction",
             currentClass: "pageNumbersCurrent",
@@ -361,7 +370,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
         >
           {images.map((image: { original: string }, index: number) => (
             <SwiperSlide
-              style={{ display: "flex", justifyContent: "center" }}
+              className="swiper-slide-custom"
+              id={"swiperSlide"}
             >
               <div className="swiper-zoom-container">
                 <img
