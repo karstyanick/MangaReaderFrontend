@@ -6,15 +6,16 @@ import 'swiper/css';
 import { Keyboard, Pagination, Zoom } from "swiper/modules";
 import {
   faArrowLeft,
-  faArrowRight
+  faArrowRight,
+  faArrowUp,
+  faArrowDown
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { start } from "repl";
 
 export interface ImageGalleryProps {
   images: { original: string }[]
   scrollDirection: "horizontal" | "vertical"
-  updatePageOrOffset: (index: number) => void
+  updatePage: (index: number) => void
   startingIndex: number
   onFillScreen: (isFilled: boolean) => void;
   fillScreen: boolean
@@ -26,7 +27,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
   scrollDirection,
   fillScreen,
-  updatePageOrOffset,
+  updatePage,
   startingIndex,
   onFillScreen,
   getPrevChapter,
@@ -38,11 +39,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const checkFirstLastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [swiperComponent, setSwiperComponent] = useState<Swiper>(null);
   const [zoomed, setZoomed] = useState<boolean>(false);
+  const [isTop, setIsTop] = useState<boolean>(false);
+  const [isBottom, setIsBottom] = useState<boolean>(false);
   let clickTimeout: NodeJS.Timeout | null = null;
   let lastPageSlideStartX: number | null = null;
   let firstPageSlideStartX: number | null = null;
-  let nextButtenRef = useRef<HTMLButtonElement>(null);
-  let prevButtonRef = useRef<HTMLButtonElement>(null);
+  let nextButtonRefH = useRef<HTMLButtonElement>(null);
+  let prevButtonRefH = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -74,7 +77,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const handleChangeIndex = (swiper: Swiper) => {
     if (!saveTimeoutRef.current) {
       saveTimeoutRef.current = setTimeout(() => {
-        updatePageOrOffset(swiper.realIndex);
+        updatePage(swiper.realIndex);
         clearTimeout(saveTimeoutRef.current as NodeJS.Timeout);
         saveTimeoutRef.current = null;
       }, 2000);
@@ -84,35 +87,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   };
 
   const adjustNavButtonStyles = (swiper: Swiper) => {
-    const slidesElement: HTMLDivElement = swiper.slides[swiper.realIndex]
     const imageElement: HTMLImageElement = swiper.slides[swiper.realIndex].querySelector('img')
 
-    if (swiper.realIndex === images.length - 1) {
-      if (!imageElement.width) {
-        imageElement.onload = () => {
-          if (!nextButtenRef.current) return
-          nextButtenRef.current.style.left = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
-          nextButtenRef.current.style.height = `${imageElement.height}px`;
-        }
-      } else {
-        if (!nextButtenRef.current) return
-        nextButtenRef.current.style.left = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
-        nextButtenRef.current.style.height = `${imageElement.height}px`;
-      }
+    if (nextButtonRefH.current) {
+      nextButtonRefH.current.style.height = `${imageElement.height}px`;
     }
-
-    if (swiper.realIndex === 0) {
-      if (!imageElement.width) {
-        imageElement.onload = () => {
-          if (!prevButtonRef.current) return
-          prevButtonRef.current.style.right = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
-          prevButtonRef.current.style.height = `${imageElement.height}px`;
-        }
-      } else {
-        if (!prevButtonRef.current) return
-        prevButtonRef.current.style.right = `${(parseInt(slidesElement.style.width.replace("px", "")) - imageElement.width) / 2}px`
-        prevButtonRef.current.style.height = `${imageElement.height}px`;
-      }
+    if (prevButtonRefH.current) {
+      prevButtonRefH.current.style.height = `${imageElement.height}px`;
     }
   }
 
@@ -125,7 +106,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       saveTimeoutRef.current = setTimeout(() => {
         if (!wrapperRef?.current) return
         const centeredIndex = getMostCenteredImageIndex();
-        updatePageOrOffset(centeredIndex || 0);
+        updatePage(centeredIndex || 0);
         clearTimeout(saveTimeoutRef.current as NodeJS.Timeout);
         saveTimeoutRef.current = null;
       }, 5000);
@@ -135,6 +116,10 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       checkFirstLastTimeoutRef.current = setTimeout(() => {
         if (!wrapperRef?.current) return
         const scrollTop = Math.ceil(wrapperRef.current.scrollTop);
+
+        setIsTop(scrollTop === 0)
+        setIsBottom(scrollTop === wrapperRef.current.scrollHeight - wrapperRef.current.offsetHeight)
+
         clearTimeout(checkFirstLastTimeoutRef.current as NodeJS.Timeout);
         checkFirstLastTimeoutRef.current = null;
       }, 200);
@@ -233,11 +218,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
 
     adjustNavButtonStyles(swiper);
-    console.log(`Sliding to: ${startingIndex}`);
-    console.log(`SlidesPerViewDynamic: ${swiper.slidesPerViewDynamic()}`)
-
-    // setTimeout(() =>
-    //   swiper.slideTo(startingIndex, 1000, false), 5000);
   }
 
   const onClickHandler = (swiper: Swiper) => {
@@ -267,15 +247,15 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const onSliderMove = (swiper: Swiper, event: TouchEvent | PointerEvent) => {
     const positionX = (event as TouchEvent).changedTouches?.[0]?.screenX || (event as PointerEvent).screenX;
 
-    if (nextButtenRef?.current && swiper.realIndex === images.length - 1 && positionX) {
+    if (nextButtonRefH?.current && swiper.realIndex === images.length - 1 && positionX) {
       const swipeDistanceNormalized = Math.min(Math.max(positionX - (lastPageSlideStartX || 0), 0), 400) / 500;
-      const currentOpacity = nextButtenRef.current?.style?.backgroundColor ? parseFloat(nextButtenRef.current.style.backgroundColor.split("0, 0, 0, ")[1].replace(")", "")) : 0;
-      nextButtenRef.current.style.backgroundColor = `rgba(0,0,0,${Math.max(swipeDistanceNormalized, currentOpacity)})`;
+      const currentOpacity = nextButtonRefH.current?.style?.backgroundColor ? parseFloat(nextButtonRefH.current.style.backgroundColor.split("0, 0, 0, ")[1].replace(")", "")) : 0;
+      nextButtonRefH.current.style.backgroundColor = `rgba(0,0,0,${Math.max(swipeDistanceNormalized, currentOpacity)})`;
     }
-    if (prevButtonRef?.current && swiper.realIndex === 0 && positionX) {
+    if (prevButtonRefH?.current && swiper.realIndex === 0 && positionX) {
       const swipeDistanceNormalized = Math.min(Math.abs(Math.min(positionX - (firstPageSlideStartX || 0), 0)), 400) / 500;
-      const currentOpacity = prevButtonRef.current?.style?.backgroundColor ? parseFloat(prevButtonRef.current.style.backgroundColor.split("0, 0, 0, ")[1].replace(")", "")) : 0;
-      prevButtonRef.current.style.backgroundColor = `rgba(0,0,0,${Math.max(swipeDistanceNormalized, currentOpacity)})`;
+      const currentOpacity = prevButtonRefH.current?.style?.backgroundColor ? parseFloat(prevButtonRefH.current.style.backgroundColor.split("0, 0, 0, ")[1].replace(")", "")) : 0;
+      prevButtonRefH.current.style.backgroundColor = `rgba(0,0,0,${Math.max(swipeDistanceNormalized, currentOpacity)})`;
     }
   }
 
@@ -285,18 +265,18 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const onSliderStartMove = (swiper: Swiper, event: TouchEvent | PointerEvent) => {
     const positionX = (event as TouchEvent).changedTouches?.[0]?.screenX || (event as PointerEvent).screenX;
 
-    if (nextButtenRef?.current && swiper.realIndex === images.length - 1 && positionX) {
+    if (nextButtonRefH?.current && swiper.realIndex === images.length - 1 && positionX) {
       if (lastPageSlideStartX === null) {
         lastPageSlideStartX = positionX
-        nextButtenRef.current.style.visibility = "visible";
+        nextButtonRefH.current.style.visibility = "visible";
       }
       clearTimeout(hideNextButtonTimeout as NodeJS.Timeout);
       hideNextButtonTimeout = null;
     }
-    if (prevButtonRef?.current && swiper.realIndex === 0 && positionX) {
+    if (prevButtonRefH?.current && swiper.realIndex === 0 && positionX) {
       if (firstPageSlideStartX === null) {
         firstPageSlideStartX = positionX
-        prevButtonRef.current.style.visibility = "visible";
+        prevButtonRefH.current.style.visibility = "visible";
       }
       clearTimeout(hidePrevButtonTimeout as NodeJS.Timeout);
       hidePrevButtonTimeout = null;
@@ -308,20 +288,20 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       if (hideNextButtonTimeout) return;
       lastPageSlideStartX = null;
       hideNextButtonTimeout = setTimeout(() => {
-        if (!nextButtenRef?.current) return;
-        nextButtenRef.current.style.backgroundColor = `rgba(0,0,0,0)`
-        nextButtenRef.current.style.visibility = "hidden";
+        if (!nextButtonRefH?.current) return;
+        nextButtonRefH.current.style.backgroundColor = `rgba(0,0,0,0)`
+        nextButtonRefH.current.style.visibility = "hidden";
         clearTimeout(hideNextButtonTimeout as NodeJS.Timeout);
         hideNextButtonTimeout = null;
       }, 3000)
     }
-    if (prevButtonRef?.current && swiper.realIndex === 0) {
+    if (prevButtonRefH?.current && swiper.realIndex === 0) {
       if (hidePrevButtonTimeout) return;
       firstPageSlideStartX = null;
       hidePrevButtonTimeout = setTimeout(() => {
-        if (!prevButtonRef?.current) return;
-        prevButtonRef.current.style.backgroundColor = `rgba(0,0,0,0)`
-        prevButtonRef.current.style.visibility = "hidden";
+        if (!prevButtonRefH?.current) return;
+        prevButtonRefH.current.style.backgroundColor = `rgba(0,0,0,0)`
+        prevButtonRefH.current.style.visibility = "hidden";
         clearTimeout(hidePrevButtonTimeout as NodeJS.Timeout);
         hidePrevButtonTimeout = null;
       }, 3000)
@@ -384,7 +364,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                   src={image.original}
                   alt={""}
                 />
-                {index === images.length - 1 && <button ref={nextButtenRef} className="nextChapterButton" onClick={getNextChapter}>
+                {index === images.length - 1 && <button ref={nextButtonRefH} className="navChapterButton nextChapterButtonH" onClick={getNextChapter}>
                   <FontAwesomeIcon
                     icon={faArrowLeft}
                     style={{
@@ -395,7 +375,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                     }}
                   />
                 </button>}
-                {index === 0 && <button ref={prevButtonRef} className="nextChapterButton" onClick={getPrevChapter}>
+                {index === 0 && <button ref={prevButtonRefH} className="navChapterButton prevChapterButtonH" onClick={getPrevChapter}>
                   <FontAwesomeIcon
                     icon={faArrowRight}
                     style={{
@@ -411,19 +391,41 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           ))}
         </SwiperComponent>
       ) : (
-        images.map((image: { original: string }, index: number) => (
-          <img
-            ref={(el) => {
-              imageRefs.current[index] = el as HTMLImageElement;
-            }}
-            key={index}
-            data-src={image.original}
-            src={"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="}
-            alt={""}
-          />
-        ))
-      )
-      }
+        images.map((image: { original: string }, index: number) => {
+          return <>
+            <img
+              ref={(el) => {
+                imageRefs.current[index] = el as HTMLImageElement;
+              }}
+              key={index}
+              data-src={image.original}
+              src={"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="}
+              alt={""}
+            />
+            {isBottom && <button className="navChapterButton nextChapterButtonV" onClick={getNextChapter}>
+              <FontAwesomeIcon
+                icon={faArrowDown}
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  position: "absolute",
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            </button>}
+            {isTop && <button className="navChapterButton prevChapterButtonV" onClick={getPrevChapter}>
+              <FontAwesomeIcon
+                icon={faArrowUp}
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  position: "absolute",
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            </button>}
+          </>
+        }))}
     </div >
   );
 };

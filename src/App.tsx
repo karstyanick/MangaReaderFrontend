@@ -380,8 +380,8 @@ function App() {
     }
   }
 
-  function updatePageOrOffset(page: number) {
-    setCurrentPage({ ...currentPage, [currentManga]: page });
+  function updatePageOrOffset(index: number) {
+    setCurrentPage({ ...currentPage, [currentManga]: index });
   }
 
   const handleScrollDirectionChange = () => {
@@ -444,7 +444,7 @@ function App() {
           />
           <CustomImageGallery
             startingIndex={currentPage[currentManga]}
-            updatePageOrOffset={updatePageOrOffset}
+            updatePage={updatePageOrOffset}
             fillScreen={fillScreen}
             images={chapter[currentManga]}
             scrollDirection={scrollDirection}
