@@ -62,12 +62,14 @@
   top: 0 !important;
   left: 0;
   width: 40px;
+  height: calc(-webkit-fill-available - 2px);
 }
 
 .prevChapterButtonH {
   top: 0 !important;
   right: 0;
   width: 40px;
+  height: calc(-webkit-fill-available - 2px);
 }
 
 .nextChapterButtonV {

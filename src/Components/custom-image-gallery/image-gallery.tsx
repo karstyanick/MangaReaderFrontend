@@ -82,20 +82,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
         saveTimeoutRef.current = null;
       }, 2000);
     }
-
-    adjustNavButtonStyles(swiper);
   };
-
-  const adjustNavButtonStyles = (swiper: Swiper) => {
-    const imageElement: HTMLImageElement = swiper.slides[swiper.realIndex].querySelector('img')
-
-    if (nextButtonRefH.current) {
-      nextButtonRefH.current.style.height = `${imageElement.height}px`;
-    }
-    if (prevButtonRefH.current) {
-      prevButtonRefH.current.style.height = `${imageElement.height}px`;
-    }
-  }
 
   const handleScroll = () => {
     if (scrollDirection === "horizontal") {
@@ -216,8 +203,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     if (paginationEl && hiddenClass) {
       paginationEl.classList.add(hiddenClass);
     }
-
-    adjustNavButtonStyles(swiper);
   }
 
   const onClickHandler = (swiper: Swiper) => {
