@@ -106,10 +106,7 @@ function App() {
     });
   }
 
-  async function signup() {
-    const username = usernameRef?.current?.value
-    const password = passwordRef?.current?.value
-
+  async function signup(username: string, password: string, confirm: string) {
     if (!username) {
       toast("Please enter a username", { type: "error" });
     }
@@ -118,12 +115,16 @@ function App() {
       toast("Please enter a password", { type: "error" });
     }
 
+    if (password !== confirm) {
+      toast("Passwords don't match")
+    }
+
     return axiosInstance
       .post(`/signup`, {
         username: username,
         password: password,
       })
-      .then(async (response) => {
+      .then(async (response: any) => {
         saveToken(response.data.token);
         initPage();
         setCurrentUser(response.data.username);
