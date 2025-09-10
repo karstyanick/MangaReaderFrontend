@@ -45,6 +45,7 @@ export const Posters: React.FC<PostersProps> = ({ mangas, openReadManga, deleteM
       {mangas.map((manga) => (
         <div style={{ display: "flex" }}>
           <img
+            className="img-no-callout"
             style={imgStyles}
             onClick={() => {
               if (justLongPressed.current) {
