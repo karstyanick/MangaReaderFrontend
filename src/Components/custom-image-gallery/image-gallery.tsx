@@ -37,6 +37,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const checkFirstLastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialMount = useRef(true);
   const [swiperComponent, setSwiperComponent] = useState<Swiper>(null);
   const [zoomed, setZoomed] = useState<boolean>(false);
   const [isTop, setIsTop] = useState<boolean>(false);
@@ -66,6 +67,10 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   }, []);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if (scrollDirection === "horizontal" && swiperComponent) {
       swiperComponent.slideTo(0);
     }
@@ -196,7 +201,12 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   }, [fillScreen])
 
   const onSwiperInit = (swiper: Swiper) => {
-    setSwiperComponent(swiper);// Grab the pagination container element...
+    setSwiperComponent(swiper);
+
+    // Explicitly navigate to saved position — initialSlide can be unreliable with RTL
+    if (startingIndex > 0) {
+      swiper.slideTo(startingIndex, 0);
+    }
 
     const paginationEl = swiper.pagination.el;
     const hiddenClass = swiper.params.pagination.hiddenClass as string;
