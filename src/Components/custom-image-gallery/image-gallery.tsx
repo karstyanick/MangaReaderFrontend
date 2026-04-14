@@ -203,11 +203,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const onSwiperInit = (swiper: Swiper) => {
     setSwiperComponent(swiper);
 
-    // Explicitly navigate to saved position — initialSlide can be unreliable with RTL
-    if (startingIndex > 0) {
-      swiper.slideTo(startingIndex, 0);
-    }
-
     const paginationEl = swiper.pagination.el;
     const hiddenClass = swiper.params.pagination.hiddenClass as string;
     if (paginationEl && hiddenClass) {
