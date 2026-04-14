@@ -57,6 +57,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    if (!currentManga) return;
     saveState(chapter, currentManga, currentPage);
   }, [
     currentPage,

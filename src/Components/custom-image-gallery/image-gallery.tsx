@@ -38,6 +38,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const checkFirstLastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialMount = useRef(true);
+  const hasAppliedInitialPosition = useRef(false);
   const [swiperComponent, setSwiperComponent] = useState<Swiper>(null);
   const [zoomed, setZoomed] = useState<boolean>(false);
   const [isTop, setIsTop] = useState<boolean>(false);
@@ -47,6 +48,40 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   let firstPageSlideStartX: number | null = null;
   let nextButtonRefH = useRef<HTMLButtonElement>(null);
   let prevButtonRefH = useRef<HTMLButtonElement>(null);
+
+  // Correct initial slide position after images load.
+  // With RTL + slidesPerView:"auto" + width:auto, Swiper calculates positions from
+  // slide widths at init time. On a fresh tab images haven't loaded yet so slides are
+  // near-zero width, causing initialSlide to land on the wrong page.
+  // Once the target image loads, we recalculate and reposition.
+  useEffect(() => {
+    if (!swiperComponent || hasAppliedInitialPosition.current) return;
+
+    if (startingIndex == null || !images?.length) {
+      hasAppliedInitialPosition.current = true;
+      return;
+    }
+
+    const targetImg = imageRefs.current[startingIndex];
+    if (!targetImg) {
+      hasAppliedInitialPosition.current = true;
+      return;
+    }
+
+    const correctPosition = () => {
+      if (hasAppliedInitialPosition.current) return;
+      hasAppliedInitialPosition.current = true;
+      swiperComponent.update();
+      swiperComponent.slideTo(startingIndex, 300);
+    };
+
+    if (targetImg.complete && targetImg.naturalWidth > 0) {
+      correctPosition();
+    } else {
+      targetImg.addEventListener('load', correctPosition, { once: true });
+      return () => targetImg.removeEventListener('load', correctPosition);
+    }
+  }, [swiperComponent]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -80,6 +115,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   }, [images]);
 
   const handleChangeIndex = (swiper: Swiper) => {
+    if (!hasAppliedInitialPosition.current) return;
     if (!saveTimeoutRef.current) {
       saveTimeoutRef.current = setTimeout(() => {
         updatePage(swiper.realIndex);
@@ -310,7 +346,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           modules={[Keyboard, Zoom, Pagination]}
           zoom={{ maxRatio: 1.000000000001 }}
           keyboard={{ enabled: true }}
-          initialSlide={startingIndex}
+          initialSlide={0}
           longSwipes={false}
           onSlideChange={handleChangeIndex}
           onSwiper={onSwiperInit}
@@ -345,7 +381,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
             >
               <div className="swiper-zoom-container">
                 <img
-                  loading="lazy"
                   style={{ maxHeight: "calc(100vh - 80px)" }}
                   ref={(el) => {
                     imageRefs.current[index] = el as HTMLImageElement;
